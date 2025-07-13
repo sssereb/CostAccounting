@@ -1,6 +1,8 @@
 ﻿
-namespace PortfolioApp.Application;
+using PortfolioApp.Application.Repositories.Interfaces;
 using PortfolioApp.Domain;
+
+namespace PortfolioApp.Application.Repositories.InMemory;
 
 public class InMemoryTradeRepository : ITradeRepository
 {

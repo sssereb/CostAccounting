@@ -2,27 +2,18 @@
 using Microsoft.Extensions.DependencyInjection;
 using PortfolioApp.Domain;
 using PortfolioApp.Application;
+using PortfolioApp.Application.Repositories.InMemory;
+using PortfolioApp.Application.Repositories.Interfaces;
+using PortfolioApp.Application.Strategies;
 
 public class Program
 {
     public static void Main(string[] args)
     {
         // --- DI bootstrapping ---
-        var services = new ServiceCollection();
-        services
-            // Strategies
-            .AddSingleton<FifoStrategy>()
-            .AddSingleton<LifoStrategy>()
-            .AddSingleton<AverageCostStrategy>()
-            .AddSingleton<ICostBasisFactory, CostBasisFactory>()
-            // Repositories
-            .AddSingleton<IAssetRepository, InMemoryAssetRepository>()
-            .AddSingleton<ILotRepository, InMemoryLotRepository>()
-            .AddSingleton<ITradeRepository, InMemoryTradeRepository>()
-            // Services
-            .AddSingleton<TradeService>();
-
-        var provider = services.BuildServiceProvider();
+        var services = new ServiceCollection().AddPortfolioCore();
+        using var provider = services.BuildServiceProvider();
+        
         var tradeService = provider.GetRequiredService<TradeService>();
         var assetRepo = provider.GetRequiredService<IAssetRepository>();
         // --- demo data ---

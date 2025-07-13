@@ -1,4 +1,6 @@
 ﻿using PortfolioApp.Application;
+using PortfolioApp.Application.Repositories.Interfaces;
+using PortfolioApp.Application.Strategies;
 using PortfolioApp.Domain;
 namespace PortfolioApp.Application;
 

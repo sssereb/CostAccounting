@@ -1,6 +1,7 @@
 ﻿
 using PortfolioApp.Domain;
-namespace PortfolioApp.Application;
+
+namespace PortfolioApp.Application.Strategies;
 
 public interface ICostBasisStrategy
 {

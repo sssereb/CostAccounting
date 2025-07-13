@@ -1,11 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using PortfolioApp.Application.Strategies;
 
-namespace PortfolioApp.Application
+namespace PortfolioApp.Application.DTOs
 {
-    public record BuyRequestDto(Guid assetId, int qty, decimal price, DateTime date);
-    public record SellRequestDto(Guid assetId, int qty, decimal price, CostBasisMethod method, DateTime date);
+    public record BuyRequestDto(
+        Guid?   AssetId,            // может быть null
+        string? Ticker,
+        int     Qty,
+        decimal Price,
+        DateTime Date);
+
+    public record SellRequestDto(
+        Guid?   AssetId,
+        string? Ticker,
+        int     Qty,
+        decimal Price,
+        CostBasisMethod Method,
+        DateTime Date);
+
+    public record LotDto( string Ticker, DateTime PurchaseDate, int QtyRemain, decimal UnitCost );
 }

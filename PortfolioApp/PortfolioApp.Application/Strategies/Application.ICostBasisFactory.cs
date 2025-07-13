@@ -1,6 +1,7 @@
 ﻿
 using Microsoft.Extensions.DependencyInjection;
-namespace PortfolioApp.Application;
+
+namespace PortfolioApp.Application.Strategies;
 
 public interface ICostBasisFactory
 {

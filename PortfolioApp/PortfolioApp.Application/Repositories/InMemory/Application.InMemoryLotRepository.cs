@@ -1,6 +1,8 @@
 ﻿
-namespace PortfolioApp.Application;
+using PortfolioApp.Application.Repositories.Interfaces;
 using PortfolioApp.Domain;
+
+namespace PortfolioApp.Application.Repositories.InMemory;
 
 public class InMemoryLotRepository : ILotRepository
 {
@@ -11,4 +13,6 @@ public class InMemoryLotRepository : ILotRepository
         var idx = _lots.FindIndex(l => l.Id == lot.Id);
         if (idx >= 0) _lots[idx] = lot; else _lots.Add(lot);
     }
+    
+    public IEnumerable<Lot> GetAll() => _lots;
 }
