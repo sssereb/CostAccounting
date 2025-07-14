@@ -1,0 +1,7 @@
+/* src/components/LotsGridAg.css */
+
+.ag-theme-alpine,
+.ag-theme-alpine .ag-root-wrapper,
+.ag-theme-alpine .ag-root {
+  background-color: transparent !important;
+}
