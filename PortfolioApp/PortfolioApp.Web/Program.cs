@@ -102,7 +102,7 @@ builder.Services.ConfigureHttpJsonOptions(opt =>
              .Join(assetRepo.GetAll(), l => l.AssetId, a => a.Id, (l, a) => new { l, a })
              .OrderBy(@t => t.a.Ticker)
              .ThenBy(@t => t.l.PurchaseDate)
-             .Select(@t => new LotDto(t.a.Ticker, t.l.PurchaseDate, t.l.QtyRemain, t.l.UnitCost)); 
+             .Select(@t => new LotDto(t.a.Ticker, t.l.PurchaseDate, t.l.QtyRemain, t.l.RawUnitCost, t.l.UnitCost)); 
          return Results.Ok(lots); 
      });
 

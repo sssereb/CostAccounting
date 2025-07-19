@@ -9,12 +9,13 @@ public interface ICostBasisFactory
 }
 public sealed class CostBasisFactory : ICostBasisFactory
 {
-    private readonly IServiceProvider _sp;
-    public CostBasisFactory(IServiceProvider sp) => _sp = sp;
-    public ICostBasisStrategy Get(CostBasisMethod m) => m switch
-    {
-        CostBasisMethod.FIFO => _sp.GetRequiredService<FifoStrategy>(),
-        CostBasisMethod.LIFO => _sp.GetRequiredService<LifoStrategy>(),
-        _ => _sp.GetRequiredService<AverageCostStrategy>()
-    };
+    private readonly IReadOnlyDictionary<CostBasisMethod, ICostBasisStrategy> _map;
+
+    public CostBasisFactory(IEnumerable<ICostBasisStrategy> strategies)
+        => _map = strategies.ToDictionary(s => s.Method);
+
+    public ICostBasisStrategy Get(CostBasisMethod method) =>
+        _map.TryGetValue(method, out var strat)
+            ? strat
+            : throw new NotSupportedException($"No strategy for {method}");
 }

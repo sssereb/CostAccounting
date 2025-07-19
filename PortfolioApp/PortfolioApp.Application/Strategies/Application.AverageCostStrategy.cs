@@ -1,15 +1,21 @@
-﻿
+﻿namespace PortfolioApp.Application.Strategies;
 using PortfolioApp.Domain;
-
-namespace PortfolioApp.Application.Strategies;
-
-public sealed class AverageCostStrategy : ICostBasisStrategy
+public sealed class AverageCostStrategy : CostBasisStrategyBase
 {
-    public SaleResult Sell(IList<Lot> lots, int qty, decimal price)
+    public override CostBasisMethod Method => CostBasisMethod.Average;
+
+    // Для AVG порядок не важен – возвращаем «как есть»
+    protected override IOrderedEnumerable<Lot> OrderLots(IEnumerable<Lot> lots) =>
+        lots.OrderBy(l => 0);
+
+    public override SaleResult Sell(IList<Lot> lots, int qty, decimal sellPrice)
     {
-        int total = lots.Sum(l => l.QtyRemain);
-        if (qty > total) throw new InvalidOperationException("Not enough shares");
-        decimal avg = lots.Sum(l => l.QtyRemain * l.UnitCost) / total;
+        int totalAvail = lots.Sum(l => l.QtyRemain);
+        if (qty > totalAvail)
+            throw new InvalidOperationException("Not enough shares.");
+
+        decimal avgCost = lots.Sum(l => l.QtyRemain * l.UnitCost) / totalAvail;
+
         int need = qty;
         foreach (var lot in lots)
         {
@@ -18,7 +24,15 @@ public sealed class AverageCostStrategy : ICostBasisStrategy
             lot.QtyRemain -= take;
             need -= take;
         }
-        int remQty = total - qty;
-        return new SaleResult(remQty, avg, remQty == 0 ? 0 : avg, qty * (price - avg));
+
+        int     remaining = totalAvail - qty;
+        decimal remCostPx = remaining == 0 ? 0 : avgCost;
+        decimal profit    = qty * (sellPrice - avgCost);
+
+        return new SaleResult(remaining,
+            avgCost,          // cost per sold share
+            remCostPx,        // cost basis on remainder
+            profit, 
+            profit);
     }
 }

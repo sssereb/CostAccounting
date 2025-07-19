@@ -17,5 +17,5 @@ namespace PortfolioApp.Application.DTOs
         CostBasisMethod Method,
         DateTime Date);
 
-    public record LotDto( string Ticker, DateTime PurchaseDate, int QtyRemain, decimal UnitCost );
+    public record LotDto( string Ticker, DateTime PurchaseDate, int QtyRemain, decimal RawUnitCost, decimal UnitCost );
 }

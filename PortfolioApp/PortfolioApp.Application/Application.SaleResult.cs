@@ -1,4 +1,11 @@
 ﻿
 namespace PortfolioApp.Application;
 
-public record SaleResult(int RemainingShares, decimal SoldCostPerShare, decimal RemainingCostPerShare, decimal Profit);
+public record SaleResult
+(
+    int RemainingShares, 
+    decimal SoldCostPerShare, 
+    decimal RemainingCostPerShare, 
+    decimal GrossProfit,
+    decimal NetProfit
+);

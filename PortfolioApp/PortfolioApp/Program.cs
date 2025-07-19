@@ -53,7 +53,7 @@ public class Program
                         };
                         var sale = tradeService.Sell(assetRepo.GetByTicker(s[0])!.Id,
                                                      int.Parse(s[1]), decimal.Parse(s[2]), method, DateTime.Parse(s[4]));
-                        Console.WriteLine($"SoldCost: {sale.SoldCostPerShare:F2}, Left: {sale.RemainingShares}, Profit: {sale.Profit:F2}");
+                        Console.WriteLine($"SoldCost: {sale.SoldCostPerShare:F2}, Left: {sale.RemainingShares}, GrossProfit: {sale.GrossProfit:F2},  NetProfit: {sale.NetProfit:F2}");
                         break;
 
                     case "list":
@@ -69,7 +69,7 @@ public class Program
                             }
                             foreach (var l in lots)
                             {
-                                Console.WriteLine($"   {l.PurchaseDate:yyyy-MM-dd}  QtyRemain={l.QtyRemain}  UnitCost={l.UnitCost}");
+                                Console.WriteLine($"   {l.PurchaseDate:yyyy-MM-dd}  QtyRemain={l.QtyRemain}  RawUnitCost={l.RawUnitCost}, UnitCost={l.UnitCost}");
                             }
                             var total = lots.Sum(l => l.QtyRemain);
                             var cps = tradeService.GetRemaininCostPerShare(a.Id);

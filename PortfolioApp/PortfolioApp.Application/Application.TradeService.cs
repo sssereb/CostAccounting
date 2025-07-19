@@ -1,4 +1,5 @@
 ﻿using PortfolioApp.Application;
+using PortfolioApp.Application.Fees;
 using PortfolioApp.Application.Repositories.Interfaces;
 using PortfolioApp.Application.Strategies;
 using PortfolioApp.Domain;
@@ -10,23 +11,36 @@ public sealed class TradeService
     private readonly ITradeRepository _trades;
     private readonly ILotRepository _lots;
     private readonly ICostBasisFactory _factory;
-    public TradeService(IAssetRepository assets, ITradeRepository trades, ILotRepository lots, ICostBasisFactory factory)
+    private readonly FeeComposite _fees;
+    public TradeService(IAssetRepository assets, ITradeRepository trades, ILotRepository lots, ICostBasisFactory factory, FeeComposite fees)
     {
-        _assets = assets; _trades = trades; _lots = lots; _factory = factory;
+        _assets = assets; _trades = trades; _lots = lots; _factory = factory; _fees = fees;
     }
-    public void Buy(Guid assetId, int qty, decimal price, DateTime date)
+    public void Buy(Guid assetId, int qty, decimal price, DateTime date )
     {
         var asset = _assets.Get(assetId) ?? throw new("Asset not found");
-        _trades.Add(new Trade(Guid.NewGuid(), assetId, date, qty, price));
-        _lots.Save(new Lot(assetId, date, qty, price));
+        var fees = _fees.CalcAll(qty, price, FeeDirection.Buy);
+        var totalFee = fees.Sum(f => f.Amount);
+        var pricePerShare = price + totalFee / qty;
+
+        var lot = new Lot(assetId, date, qty, rawUnitCost: price, unitCostIncludingFees: pricePerShare);
+        var trade = new Trade(Guid.NewGuid(), assetId, date, qty, price, fees);
+        
+        _trades.Add(trade);
+        _lots.Save(lot);
     }
     public SaleResult Sell(Guid assetId, int qty, decimal price, CostBasisMethod method, DateTime date)
     {
         var lots = _lots.GetForAsset(assetId).ToList();
         var res = _factory.Get(method).Sell(lots, qty, price);
+        var fees = _fees.CalcAll(qty, price, FeeDirection.Sell);
+        var totalFee = fees.Sum(f => f.Amount);
         foreach (var l in lots) _lots.Save(l);
-        _trades.Add(new Trade(Guid.NewGuid(), assetId, date, -qty, price));
-        return res;
+        _trades.Add(new Trade(Guid.NewGuid(), assetId, date, -qty, price, fees));
+        return res with
+        {
+            NetProfit = res.GrossProfit - totalFee
+        };
     }
 
     public decimal GetRemaininCostPerShare(Guid assetId)
