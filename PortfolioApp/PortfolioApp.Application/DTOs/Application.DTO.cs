@@ -1,4 +1,5 @@
 ﻿using PortfolioApp.Application.Strategies;
+using PortfolioApp.Domain;
 
 namespace PortfolioApp.Application.DTOs
 {
@@ -18,4 +19,19 @@ namespace PortfolioApp.Application.DTOs
         DateTime Date);
 
     public record LotDto( string Ticker, DateTime PurchaseDate, int QtyRemain, decimal RawUnitCost, decimal UnitCost );
+    
+    public record FeeRuleDto(
+        FeeType      Type,
+        decimal      Amount,
+        FeeDirection Direction);
+    
+    public static class FeeRuleMapping
+    {
+        public static FeeRuleDto ToDto(this FeeRegistration r) =>
+            new(r.Type, r.Amount, r.Direction);
+
+        public static FeeRegistration ToDomain(this FeeRuleDto d) =>
+            new(d.Type, d.Amount, d.Direction);
+    }
+
 }

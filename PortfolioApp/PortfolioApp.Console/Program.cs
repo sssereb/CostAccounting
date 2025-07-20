@@ -16,7 +16,17 @@ public class Program
         
         var tradeService = provider.GetRequiredService<TradeService>();
         var assetRepo = provider.GetRequiredService<IAssetRepository>();
+        var feeProv = provider.GetRequiredService<IFeeRuleProvider>();
         // --- demo data ---
+        
+        
+        feeProv.SetRules(new[]
+        {
+            new FeeRegistration(FeeType.FixedPerTrade,   7m,   FeeDirection.Sell),
+            new FeeRegistration(FeeType.Percent, 0.01m, FeeDirection.Sell)
+        });
+
+        
         var asset = assetRepo.Create("MSFT");
          tradeService.Buy(asset.Id, 100, 20m, new DateTime(2025, 1, 1));
          tradeService.Buy(asset.Id, 150, 30m, new DateTime(2025, 2, 1));
@@ -25,6 +35,13 @@ public class Program
         // tradeService.Buy(asset.Id, 100, 20m, new DateTime(2025, 1, 1)); 
         // tradeService.Buy(asset.Id, 200, 30m, new DateTime(2025, 2, 1));
 
+        var feeRules = feeProv.GetRules();
+
+        foreach (var f in feeRules)
+        {
+            Console.WriteLine($"Fee Rules: {f.Direction}, Amount: {f.Amount}, Type: {f.Type} ");
+        }
+            
 
         while (true)
         {

@@ -29,18 +29,13 @@ public sealed class PercentOfValue : IFeeCalculator
     public Fee Calc(int qty, decimal px)=> new(FeeType.Percent, qty*px*_pct);
 }
 
-public sealed class FeeComposite : IFeeCalculator
+public sealed class FeeComposite
 {
-    private readonly FeeRegistration[] _regs;
-    public FeeComposite(IEnumerable<FeeRegistration> regs) =>
-        _regs = regs.ToArray();
+    private readonly IEnumerable<IFeeCalculator> _calcs;
 
-    public IReadOnlyList<Fee> CalcAll(int qty, decimal px, FeeDirection side) =>
-        _regs.Where(r => (r.Direction & side) != 0)
-            .Select(r => r.Calculator.Calc(qty, px))
-            .ToList();
+    public FeeComposite(IEnumerable<IFeeCalculator> calculators) =>
+        _calcs = calculators;
 
-    
-    public Fee Calc(int q, decimal p)
-        => throw new NotSupportedException("Call CalcAll instead.");
+    public IReadOnlyList<Fee> CalcAll(int qty, decimal price, FeeDirection dir) =>
+        _calcs.Select(c => c.Calc(qty, price)).ToList();
 }

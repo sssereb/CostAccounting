@@ -4,6 +4,7 @@ using Microsoft.OpenApi;
 using Microsoft.OpenApi.Models;
 using PortfolioApp.Application;
 using PortfolioApp.Application.DTOs;
+using PortfolioApp.Application.Fees;
 using PortfolioApp.Application.Repositories.InMemory;
 using PortfolioApp.Application.Repositories.Interfaces;
 using PortfolioApp.Application.Strategies;
@@ -41,6 +42,17 @@ builder.Services.ConfigureHttpJsonOptions(opt =>
  {
      var repo = scope.ServiceProvider.GetRequiredService<IAssetRepository>();
      var svc  = scope.ServiceProvider.GetRequiredService<TradeService>();
+     
+     var prov = app.Services.GetRequiredService<IFeeRuleProvider>();
+     if (!prov.GetRules().Any())
+     {
+         var seed = new[]
+         {
+             new FeeRegistration(FeeType.FixedPerTrade , 7m   , FeeDirection.Sell),
+             new FeeRegistration(FeeType.Percent, 0.01m, FeeDirection.Sell)
+         };
+         prov.SetRules(seed);
+     }
 
      if (repo.GetByTicker("MSFT") is null)
      {
@@ -52,7 +64,30 @@ builder.Services.ConfigureHttpJsonOptions(opt =>
  }
  
  // ───── Endpoints ─────
- app.MapGet("/assets/id/{ticker}", (string ticker, IAssetRepository repo) =>
+ app.MapGet ("/fees/get"   , (IFeeRuleProvider p) =>
+     Results.Ok(p.GetRules().Select(r => r.ToDto())));
+
+ app.MapPost("/fees/save",
+     (IFeeRuleProvider prov, IEnumerable<FeeRuleDto> body) =>
+     {
+         if (body.Any(r => !Enum.IsDefined(typeof(FeeType), r.Type)))
+             return Results.BadRequest("Unknown fee type.");
+
+         if (body.Any(r => r.Amount < 0))
+             return Results.BadRequest("Amount must be non-negative.");
+
+         prov.SetRules(body.Select(d => d.ToDomain()));
+         return Results.NoContent();
+     });
+
+
+ app.MapDelete("/fees/delete", (IFeeRuleProvider p) =>
+ {
+     p.SetRules(Array.Empty<FeeRegistration>());
+     return Results.NoContent();
+ });
+
+app.MapGet("/assets/id/{ticker}", (string ticker, IAssetRepository repo) =>
  {
      var asset = repo.GetByTicker(ticker);      // может вернуться null
 

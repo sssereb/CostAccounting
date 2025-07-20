@@ -11,8 +11,8 @@ public sealed class TradeService
     private readonly ITradeRepository _trades;
     private readonly ILotRepository _lots;
     private readonly ICostBasisFactory _factory;
-    private readonly FeeComposite _fees;
-    public TradeService(IAssetRepository assets, ITradeRepository trades, ILotRepository lots, ICostBasisFactory factory, FeeComposite fees)
+    private readonly IFeeService _fees;
+    public TradeService(IAssetRepository assets, ITradeRepository trades, ILotRepository lots, ICostBasisFactory factory, IFeeService fees)
     {
         _assets = assets; _trades = trades; _lots = lots; _factory = factory; _fees = fees;
     }

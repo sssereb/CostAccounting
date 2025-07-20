@@ -5,5 +5,6 @@ namespace PortfolioApp.Application;
 
 
 public sealed record FeeRegistration(
-    IFeeCalculator Calculator,
-    FeeDirection     Direction);
+    FeeType       Type,     // ← «какой» калькулятор создавать
+    decimal       Amount,   // ← параметр (фикс $, $/шт, %)
+    FeeDirection  Direction);

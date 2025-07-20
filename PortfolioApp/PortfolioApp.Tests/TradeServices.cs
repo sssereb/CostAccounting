@@ -16,48 +16,53 @@ namespace PortfolioApp.Tests;
 public class TradeServiceTests
 {
     /* ----------------------------------------------------------------
-     * Вспомогательная утилита: “нулевой” FeeComposite (комиссии = 0)
+     * “Порожній” FeeComposite: усі калькулятори повертають 0 комисій
      * --------------------------------------------------------------*/
-    private static FeeComposite ZeroFeeComposite() => new(new[]
-    {
-        new FeeRegistration(new FixedPerTrade(0m), FeeDirection.Buy),
-        new FeeRegistration(new FixedPerTrade(0m), FeeDirection.Sell)
-    });
+    private static FeeComposite ZeroFeeComposite() => new(
+        new[]
+        {
+            new FeeRegistration(FeeType.FixedPerTrade,  0m, FeeDirection.Buy),
+            new FeeRegistration(FeeType.FixedPerTrade,  0m, FeeDirection.Sell)
+        }
+        .Select(FeeCalculatorFactory.Create)   // → IFeeCalculator
+    );
 
     /* ----------------------------------------------------------------
-     * BUY: успешная покупка
-     *  – ищет актив;
-     *  – сохраняет лот и сделку;
-     *  – UnitCost = price (комиссий нет).
+     * BUY: успішна покупка
      * --------------------------------------------------------------*/
     [Fact(DisplayName = "Buy: сохраняет Lot и Trade с корректными полями")]
     public void Buy_SavesLotAndTrade()
     {
-        // исходные данные
         var assetId = Guid.NewGuid();
         const int qty = 100;
         const decimal price = 50m;
         var date = new DateTime(2025, 7, 20);
 
-        // IAssetRepository → возвращаем «пустой» Asset
         var assets = new Mock<IAssetRepository>();
+#pragma warning disable SYSLIB0050
         var dummyAsset = (Asset)FormatterServices.GetUninitializedObject(typeof(Asset));
+#pragma warning restore SYSLIB0050
         assets.Setup(r => r.Get(assetId)).Returns(dummyAsset);
 
-        // перехватываем сохранённый Lot
         Lot? storedLot = null;
         var lotsRepo = new Mock<ILotRepository>();
         lotsRepo.Setup(r => r.Save(It.IsAny<Lot>()))
                 .Callback<Lot>(l => storedLot = l);
 
         var tradeRepo = new Mock<ITradeRepository>();
-
+        
+        var feeSvc = new Mock<IFeeService>();
+        feeSvc.Setup(f => f.CalcAll(It.IsAny<int>(),
+                It.IsAny<decimal>(),
+                It.IsAny<FeeDirection>()))
+            .Returns(Array.Empty<Fee>());   // комиссии = 0
+        
         var service = new TradeService(
             assets.Object,
             tradeRepo.Object,
             lotsRepo.Object,
             Mock.Of<ICostBasisFactory>(),
-            ZeroFeeComposite());
+            feeSvc.Object);
 
         // act
         service.Buy(assetId, qty, price, date);
@@ -66,20 +71,20 @@ public class TradeServiceTests
         assets.Verify(r => r.Get(assetId), Times.Once);
         tradeRepo.Verify(r => r.Add(It.Is<Trade>(t =>
             t.AssetId == assetId &&
-            t.Quantity     == qty &&
-            t.Price   == price)), Times.Once);
+            t.Quantity == qty &&
+            t.Price    == price)), Times.Once);
 
         Assert.NotNull(storedLot);
         Assert.Equal(assetId, storedLot!.AssetId);
-        Assert.Equal(qty,      storedLot.QtyRemain);
-        Assert.Equal(price,    storedLot.UnitCost);      // комиссии = 0
-        Assert.Equal(date,     storedLot.PurchaseDate);
+        Assert.Equal(qty,  storedLot.QtyRemain);
+        Assert.Equal(price,storedLot.UnitCost);   // комиссий нет
+        Assert.Equal(date, storedLot.PurchaseDate);
     }
 
     /* ----------------------------------------------------------------
-     * BUY: актив не найден → InvalidOperationException
+     * BUY: Asset не найден
      * --------------------------------------------------------------*/
-    [Fact(DisplayName = "Buy: Asset отсутствует — бросает InvalidOperationException")]
+    [Fact(DisplayName = "Buy: Asset отсутствует → InvalidOperationException")]
     public void Buy_Throws_When_AssetMissing()
     {
         var assets = new Mock<IAssetRepository>();
@@ -90,20 +95,16 @@ public class TradeServiceTests
             Mock.Of<ITradeRepository>(),
             Mock.Of<ILotRepository>(),
             Mock.Of<ICostBasisFactory>(),
-            ZeroFeeComposite());
+            Mock.Of<IFeeService>());
 
         Assert.Throws<InvalidOperationException>(() =>
             service.Buy(Guid.NewGuid(), 1, 1m, DateTime.Today));
     }
 
     /* ----------------------------------------------------------------
-     * SELL: проверяем orchestration
-     *  – вызывает стратегию;
-     *  – сохраняет изменённые лоты;
-     *  – добавляет сделку;
-     *  – NetProfit = GrossProfit (fee = 0).
+     * SELL: orchestration — стратегия, сохранения, Trade, NetProfit
      * --------------------------------------------------------------*/
-    [Fact(DisplayName = "Sell: корректно возвращает NetProfit и сохраняет изменения")]
+    [Fact(DisplayName = "Sell: корректно сохраняет изменения и считает NetProfit")]
     public void Sell_PersistsEverything()
     {
         var assetId = Guid.NewGuid();
@@ -115,7 +116,7 @@ public class TradeServiceTests
 
         var tradeRepo = new Mock<ITradeRepository>();
 
-        // мок-стратегия отдаёт фиксированный результат
+        // заглушка стратегии
         var stub = new SaleResult(
             RemainingShares: 0,
             SoldCostPerShare: 95m,
@@ -129,19 +130,25 @@ public class TradeServiceTests
 
         var factory = new Mock<ICostBasisFactory>();
         factory.Setup(f => f.Get(CostBasisMethod.FIFO)).Returns(strategy.Object);
-
+        
+        var feeSvc = new Mock<IFeeService>();
+        feeSvc.Setup(f => f.CalcAll(It.IsAny<int>(),
+                It.IsAny<decimal>(),
+                It.IsAny<FeeDirection>()))
+            .Returns(Array.Empty<Fee>());   // комиссии = 0
+        
         var service = new TradeService(
             Mock.Of<IAssetRepository>(),
             tradeRepo.Object,
             lotsRepo.Object,
             factory.Object,
-            ZeroFeeComposite());
+            feeSvc.Object);                   // ← передаём .Object
 
         // act
         var res = service.Sell(assetId, 50, 100m, CostBasisMethod.FIFO, DateTime.Today);
 
         // assert
-        Assert.Equal(stub.GrossProfit, res.NetProfit);      // fee = 0
+        Assert.Equal(stub.GrossProfit, res.NetProfit);  // fee = 0
 
         lotsRepo.Verify(r => r.Save(It.IsAny<Lot>()), Times.AtLeastOnce());
         tradeRepo.Verify(r => r.Add(It.Is<Trade>(t =>
