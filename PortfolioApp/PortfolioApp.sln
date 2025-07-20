@@ -3,13 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.13.35931.197
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PortfolioApp", "PortfolioApp\PortfolioApp.csproj", "{8F2BBCA0-66AA-4323-B379-21EA785C6464}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PortfolioApp.Console", "PortfolioApp.Console\PortfolioApp.Console.csproj", "{8F2BBCA0-66AA-4323-B379-21EA785C6464}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PortfolioApp.Domain", "PortfolioApp.Domain\PortfolioApp.Domain.csproj", "{EBD15D11-68E6-4806-8884-219759327A55}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PortfolioApp.Application", "PortfolioApp.Application\PortfolioApp.Application.csproj", "{0D63956D-8836-4048-98C9-53A6E55C0897}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PortfolioApp.Web", "PortfolioApp.Web\PortfolioApp.Web.csproj", "{93C54C49-39BE-4D74-8599-895496E65710}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PortfolioApp.Tests", "PortfolioApp.Tests\PortfolioApp.Tests.csproj", "{B88B1111-4A75-4B20-90F8-56E044C9EFF7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -69,6 +71,18 @@ Global
 		{93C54C49-39BE-4D74-8599-895496E65710}.Release|x64.Build.0 = Release|Any CPU
 		{93C54C49-39BE-4D74-8599-895496E65710}.Release|x86.ActiveCfg = Release|Any CPU
 		{93C54C49-39BE-4D74-8599-895496E65710}.Release|x86.Build.0 = Release|Any CPU
+		{B88B1111-4A75-4B20-90F8-56E044C9EFF7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B88B1111-4A75-4B20-90F8-56E044C9EFF7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B88B1111-4A75-4B20-90F8-56E044C9EFF7}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B88B1111-4A75-4B20-90F8-56E044C9EFF7}.Debug|x64.Build.0 = Debug|Any CPU
+		{B88B1111-4A75-4B20-90F8-56E044C9EFF7}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B88B1111-4A75-4B20-90F8-56E044C9EFF7}.Debug|x86.Build.0 = Debug|Any CPU
+		{B88B1111-4A75-4B20-90F8-56E044C9EFF7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B88B1111-4A75-4B20-90F8-56E044C9EFF7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B88B1111-4A75-4B20-90F8-56E044C9EFF7}.Release|x64.ActiveCfg = Release|Any CPU
+		{B88B1111-4A75-4B20-90F8-56E044C9EFF7}.Release|x64.Build.0 = Release|Any CPU
+		{B88B1111-4A75-4B20-90F8-56E044C9EFF7}.Release|x86.ActiveCfg = Release|Any CPU
+		{B88B1111-4A75-4B20-90F8-56E044C9EFF7}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

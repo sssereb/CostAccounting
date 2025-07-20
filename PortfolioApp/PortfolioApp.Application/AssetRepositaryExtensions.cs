@@ -1,4 +1,4 @@
-// PortfolioApp.Application/Extensions/AssetRepositoryExtensions.cs
+// PortfolioApp.Console.Application/Extensions/AssetRepositoryExtensions.cs
 
 using PortfolioApp.Application.Repositories.Interfaces;
 using PortfolioApp.Domain;

@@ -12,6 +12,10 @@ public abstract class CostBasisStrategyBase : ICostBasisStrategy
     /// Шаблонный метод; для AVG его можно переопределить.
     public virtual SaleResult Sell(IList<Lot> lots, int qty, decimal price)
     {
+        
+        if (qty > lots.Sum(l => l.QtyRemain))
+            throw new InvalidOperationException("Not enough shares");
+        
         var ordered = OrderLots(lots);
 
         int need = qty; decimal costSold = 0, profit = 0, gross = 0;
@@ -26,8 +30,6 @@ public abstract class CostBasisStrategyBase : ICostBasisStrategy
             profit   += take * (price - lot.RawUnitCost);
             gross    += take * (price - lot.UnitCost);
         }
-
-        if (need > 0) throw new InvalidOperationException("Not enough shares");
 
         int     remQty   = lots.Sum(l => l.QtyRemain);
         decimal remCost  = lots.Sum(l => l.QtyRemain * l.UnitCost);

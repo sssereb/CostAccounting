@@ -18,7 +18,7 @@ public sealed class TradeService
     }
     public void Buy(Guid assetId, int qty, decimal price, DateTime date )
     {
-        var asset = _assets.Get(assetId) ?? throw new("Asset not found");
+        var asset = _assets.Get(assetId) ?? throw new InvalidOperationException("Asset not found");
         var fees = _fees.CalcAll(qty, price, FeeDirection.Buy);
         var totalFee = fees.Sum(f => f.Amount);
         var pricePerShare = price + totalFee / qty;
