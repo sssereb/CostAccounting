@@ -1,11 +1,11 @@
-﻿
-using PortfolioApp.Domain;
+﻿using PortfolioApp.Domain;
+using System.Threading;
 
 namespace PortfolioApp.Application.Repositories.Interfaces;
+
 public interface ILotRepository
 {
-    IEnumerable<Lot> GetForAsset(Guid assetId);
-    void Save(Lot lot);
-
-    IEnumerable<Lot> GetAll();
+    Task<IReadOnlyList<Lot>> GetForAssetAsync(Guid assetId, CancellationToken ct = default);
+    Task SaveAsync(Lot lot, CancellationToken ct = default);
+    Task<IReadOnlyList<Lot>> GetAllAsync(CancellationToken ct = default);
 }

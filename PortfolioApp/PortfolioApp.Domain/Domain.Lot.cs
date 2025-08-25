@@ -10,6 +10,7 @@ public class Lot
     
     public decimal RawUnitCost { get; init; } // + Fees
     public decimal UnitCost { get; init; } // + Fees
+    protected Lot() { }
     public Lot(Guid assetId,
         DateTime dt,
         int quantity,

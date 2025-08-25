@@ -1,4 +1,4 @@
-﻿
+﻿using System.Collections.Concurrent;
 using PortfolioApp.Application.Repositories.Interfaces;
 using PortfolioApp.Domain;
 
@@ -6,13 +6,30 @@ namespace PortfolioApp.Application.Repositories.InMemory;
 
 public class InMemoryLotRepository : ILotRepository
 {
-    private readonly List<Lot> _lots = new();
-    public IEnumerable<Lot> GetForAsset(Guid assetId) => _lots.Where(l => l.AssetId == assetId);
-    public void Save(Lot lot)
+    private readonly ConcurrentDictionary<Guid, Lot> _lotsById = new();
+
+    public Task<IReadOnlyList<Lot>> GetForAssetAsync(Guid assetId, CancellationToken ct = default)
     {
-        var idx = _lots.FindIndex(l => l.Id == lot.Id);
-        if (idx >= 0) _lots[idx] = lot; else _lots.Add(lot);
+        // для предсказуемости сортируем по дате покупки (полезно для FIFO)
+        var list = _lotsById.Values
+            .Where(l => l.AssetId == assetId)
+            .OrderBy(l => l.PurchaseDate)
+            .ToList();
+        return Task.FromResult((IReadOnlyList<Lot>)list);
     }
-    
-    public IEnumerable<Lot> GetAll() => _lots;
+
+    public Task SaveAsync(Lot lot, CancellationToken ct = default)
+    {
+        _lotsById[lot.Id] = lot;
+        return Task.CompletedTask;
+    }
+
+    public Task<IReadOnlyList<Lot>> GetAllAsync(CancellationToken ct = default)
+    {
+        var list = _lotsById.Values
+            .OrderBy(l => l.AssetId)
+            .ThenBy(l => l.PurchaseDate)
+            .ToList();
+        return Task.FromResult((IReadOnlyList<Lot>)list);
+    }
 }

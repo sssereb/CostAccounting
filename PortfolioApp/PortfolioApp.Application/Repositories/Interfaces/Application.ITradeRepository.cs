@@ -1,10 +1,11 @@
-﻿
-
-using PortfolioApp.Domain;
+﻿using PortfolioApp.Domain;
+using System.Threading;
 
 namespace PortfolioApp.Application.Repositories.Interfaces;
+
 public interface ITradeRepository
 {
-    IEnumerable<Trade> GetForAsset(Guid assetId);
-    void Add(Trade trade);
+    Task AddAsync(Trade trade, CancellationToken ct = default);
+    Task<IReadOnlyList<Trade>> GetForAssetAsync(Guid assetId, CancellationToken ct = default);
+    Task<IReadOnlyList<Trade>> GetAllAsync(CancellationToken ct = default);
 }

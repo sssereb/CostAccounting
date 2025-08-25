@@ -12,6 +12,14 @@ namespace PortfolioApp.Application;
 
 public static class PortfolioServices
 {
+    public static IServiceCollection AddPortfolioRepositoriesInMemory(this IServiceCollection services)
+    {
+        services.AddScoped<IAssetRepository, InMemoryAssetRepository>();
+        services.AddScoped<ILotRepository,   InMemoryLotRepository>();
+        services.AddScoped<ITradeRepository, InMemoryTradeRepository>();
+        return services;
+    }
+    
     public static IServiceCollection AddPortfolioCore(this IServiceCollection services)
     {
         return services
@@ -26,12 +34,7 @@ public static class PortfolioServices
                 new MemoryFeeRuleProvider(Array.Empty<FeeRegistration>()))
             .AddSingleton<IFeeService, FeeService>()
 
-            /* ── Repositories ───────────────────────────────────────── */
-            .AddSingleton<IAssetRepository, InMemoryAssetRepository>()
-            .AddSingleton<ILotRepository,   InMemoryLotRepository>()
-            .AddSingleton<ITradeRepository, InMemoryTradeRepository>()
-
             /* ── Application services ──────────────────────────────── */
-            .AddSingleton<TradeService>();
+            .AddScoped<TradeService>();
     }
 }

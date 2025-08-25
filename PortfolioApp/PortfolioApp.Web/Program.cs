@@ -1,145 +1,169 @@
-﻿using System.Text.Json;
-using System.Text.Json.Serialization;
-using Microsoft.OpenApi;
+﻿using System.Text.Json.Serialization;
 using Microsoft.OpenApi.Models;
 using PortfolioApp.Application;
 using PortfolioApp.Application.DTOs;
 using PortfolioApp.Application.Fees;
-using PortfolioApp.Application.Repositories.InMemory;
 using PortfolioApp.Application.Repositories.Interfaces;
 using PortfolioApp.Application.Strategies;
 using PortfolioApp.Domain;
+using PortfolioApp.Infrastructure.EfCore; // <-- AddPortfolioEfCoreSqlite
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ───── DI: регистрируем всё, что было в консоли ─────
-builder.Services.AddPortfolioCore();
+// ── DB path (env var DB_PATH или дефолт под профилем пользователя)
+string GetDefaultDbPath()
+{
+    var root = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+    var appDir = Path.Combine(root, "PortfolioApp");
+    Directory.CreateDirectory(appDir);
+    return Path.Combine(appDir, "portfolio.db");
+}
 
-// ───── Swagger & CORS ─────
+
+// ── DI
+builder.Services
+    .AddPortfolioCore();                 // ваше ядро (FeeService/TradeService и т.д.)
+   
+        
+var storageEnv = Environment.GetEnvironmentVariable("PORTFOLIO_STORAGE") ?? "Sqlite"; // "Sqlite" | "InMemory"
+var useSqlite  = string.Equals(storageEnv, "Sqlite", StringComparison.OrdinalIgnoreCase);
+var dbPath  = Environment.GetEnvironmentVariable("DB_PATH") ?? GetDefaultDbPath();
+
+if (useSqlite)
+{
+    builder.Services.AddPortfolioEfCoreSqlite(dbPath);
+    builder.Services.AddPortfolioRepositoriesEfCore();
+}
+else
+{
+    builder.Services.AddPortfolioRepositoriesInMemory();
+}
+
+// ── Swagger & CORS
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Portfolio API", Version = "v1" });
+});
+builder.Services.AddCors(opt =>
+    opt.AddPolicy("Frontend", p =>
+        p.WithOrigins("http://localhost:5173").AllowAnyHeader().AllowAnyMethod()));
 
- builder.Services.AddSwaggerGen(c =>
- {
-     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Portfolio API", Version = "v1" });
- });
- builder.Services.AddCors(opt =>
-     opt.AddPolicy("Frontend", p =>
-         p.WithOrigins("http://localhost:5173").AllowAnyHeader().AllowAnyMethod()));
- 
+// ── JSON enums как строки
 builder.Services.ConfigureHttpJsonOptions(opt =>
- {
-     opt.SerializerOptions.Converters.Add(
-         new JsonStringEnumConverter(null));
- });
+{
+    opt.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
 
- var app = builder.Build();
- app.UseCors("Frontend");
- app.UseSwagger();
- app.UseSwaggerUI();
+var app = builder.Build();
+app.UseCors("Frontend");
+app.UseSwagger();
+app.UseSwaggerUI();
 
-/* ── demo-сидирование ── */
- using (var scope = app.Services.CreateScope())
- {
-     var repo = scope.ServiceProvider.GetRequiredService<IAssetRepository>();
-     var svc  = scope.ServiceProvider.GetRequiredService<TradeService>();
-     
-     var prov = app.Services.GetRequiredService<IFeeRuleProvider>();
-     if (!prov.GetRules().Any())
-     {
-         var seed = new[]
-         {
-             new FeeRegistration(FeeType.FixedPerTrade , 7m   , FeeDirection.Sell),
-             new FeeRegistration(FeeType.Percent, 0.01m, FeeDirection.Sell)
-         };
-         prov.SetRules(seed);
-     }
+/* ── demo-сидирование комиссий и MSFT (один раз) ── */
+using (var scope = app.Services.CreateScope())
+{
+    var sp   = scope.ServiceProvider;
+    var repo = sp.GetRequiredService<IAssetRepository>();
+    var svc  = sp.GetRequiredService<TradeService>();
+    var prov = sp.GetRequiredService<IFeeRuleProvider>();
 
-     if (repo.GetByTicker("MSFT") is null)
-     {
-         var asset = repo.Create("MSFT");
-         svc.Buy(asset.Id, 100, 20m, new DateTime(2025, 1, 1));
-         svc.Buy(asset.Id, 150, 30m, new DateTime(2025, 2, 1));
-         svc.Buy(asset.Id, 120, 10m, new DateTime(2025, 3, 1));
-     }
- }
- 
- // ───── Endpoints ─────
- app.MapGet ("/fees/get"   , (IFeeRuleProvider p) =>
-     Results.Ok(p.GetRules().Select(r => r.ToDto())));
+    if (!prov.GetRules().Any())
+    {
+        prov.SetRules(new[]
+        {
+            new FeeRegistration(FeeType.FixedPerTrade, 7m,    FeeDirection.Sell),
+            new FeeRegistration(FeeType.Percent,       0.01m, FeeDirection.Sell)
+        });
+    }
 
- app.MapPost("/fees/save",
-     (IFeeRuleProvider prov, IEnumerable<FeeRuleDto> body) =>
-     {
-         if (body.Any(r => !Enum.IsDefined(typeof(FeeType), r.Type)))
-             return Results.BadRequest("Unknown fee type.");
+    // var msft = await repo.GetByTickerAsync("MSFT");
+    // if (msft is null)
+    // {
+    //     msft = await repo.CreateAsync("MSFT");
+    //     await svc.BuyAsync(msft.Id, 100, 20m, new DateTime(2025, 1, 1));
+    //     await svc.BuyAsync(msft.Id, 150, 30m, new DateTime(2025, 2, 1));
+    //     await svc.BuyAsync(msft.Id, 120, 10m, new DateTime(2025, 3, 1));
+    // }
+}
 
-         if (body.Any(r => r.Amount < 0))
-             return Results.BadRequest("Amount must be non-negative.");
+// ───── Endpoints (ВСЕ async) ─────
 
-         prov.SetRules(body.Select(d => d.ToDomain()));
-         return Results.NoContent();
-     });
+// Fees
+app.MapGet("/fees/get", (IFeeRuleProvider p)
+    => Results.Ok(p.GetRules().Select(r => r.ToDto())));
 
+app.MapPost("/fees/save", (IFeeRuleProvider prov, IEnumerable<FeeRuleDto> body) =>
+{
+    if (body.Any(r => !Enum.IsDefined(typeof(FeeType), r.Type)))
+        return Results.BadRequest("Unknown fee type.");
+    if (body.Any(r => r.Amount < 0))
+        return Results.BadRequest("Amount must be non-negative.");
 
- app.MapDelete("/fees/delete", (IFeeRuleProvider p) =>
- {
-     p.SetRules(Array.Empty<FeeRegistration>());
-     return Results.NoContent();
- });
+    prov.SetRules(body.Select(d => d.ToDomain()));
+    return Results.NoContent();
+});
 
-app.MapGet("/assets/id/{ticker}", (string ticker, IAssetRepository repo) =>
- {
-     var asset = repo.GetByTicker(ticker);      // может вернуться null
+app.MapDelete("/fees/delete", (IFeeRuleProvider p) =>
+{
+    p.SetRules(Array.Empty<FeeRegistration>());
+    return Results.NoContent();
+});
 
-     if (asset is null)
-         return Results.NotFound($"Asset with ticker '{ticker}' not found");
+// Assets
+app.MapGet("/assets/id/{ticker}", async (string ticker, IAssetRepository repo) =>
+{
+    var asset = await repo.GetByTickerAsync(ticker);
+    return asset is null
+        ? Results.NotFound($"Asset with ticker '{ticker}' not found")
+        : Results.Ok(asset.Id);
+});
 
-     return Results.Ok(asset.Id);
- });
+app.MapGet("/assets", async (IAssetRepository repo)
+    => Results.Ok(await repo.GetAllAsync()));
 
- app.MapGet("/assets", (IAssetRepository repo) =>
- {
-     return repo.GetAll();
- });
+// BUY
+app.MapPost("/trades/buy", async (BuyRequestDto dto, IAssetRepository repo, TradeService svc) =>
+{
+    if (dto.AssetId is null && string.IsNullOrWhiteSpace(dto.Ticker))
+        return Results.BadRequest(new { error = "assetId or ticker required" });
 
- // BUY
- app.MapPost("/trades/buy", (BuyRequestDto dto,
-     IAssetRepository repo,
-     TradeService svc) =>
- {
-     Guid assetId = dto.AssetId ?? repo.GetOrCreate(dto.Ticker!)
-         .Id;                 // бросит NRE, если null
-     svc.Buy(assetId, dto.Qty, dto.Price, dto.Date);
-     return Results.Ok();
- });
+    var assetId = dto.AssetId ?? (await IAssetRepository.GetOrCreateAsync(repo, dto.Ticker!)).Id;
+    await svc.BuyAsync(assetId, dto.Qty, dto.Price, dto.Date);
+    return Results.Ok();
+});
 
 // SELL
- app.MapPost("/trades/sell", (SellRequestDto dto,
-     IAssetRepository repo,
-     TradeService svc) =>
- {
-     Guid assetId;
-     if (dto.AssetId is not null)
-         assetId = dto.AssetId.Value;
-     else if (dto.Ticker is not null && repo.GetByTicker(dto.Ticker) is { } a)
-         assetId = a.Id;
-     else
-         return Results.BadRequest(new { error = "assetId or ticker required" });
+app.MapPost("/trades/sell", async (SellRequestDto dto, IAssetRepository repo, TradeService svc) =>
+{
+    Guid assetId;
+    if (dto.AssetId is not null)
+        assetId = dto.AssetId.Value;
+    else if (!string.IsNullOrWhiteSpace(dto.Ticker))
+    {
+        var a = await repo.GetByTickerAsync(dto.Ticker);
+        if (a is null) return Results.NotFound($"Asset '{dto.Ticker}' not found");
+        assetId = a.Id;
+    }
+    else return Results.BadRequest(new { error = "assetId or ticker required" });
 
-     var res = svc.Sell(assetId, dto.Qty, dto.Price, dto.Method, dto.Date);
-     return Results.Ok(res);
- });
+    var res = await svc.SellAsync(assetId, dto.Qty, dto.Price, dto.Method, dto.Date);
+    return Results.Ok(res);
+});
 
- app.MapGet("/lots", 
-     (ILotRepository lotRepo, IAssetRepository assetRepo) =>
-     
-     { var lots = lotRepo.GetAll()
-             .Join(assetRepo.GetAll(), l => l.AssetId, a => a.Id, (l, a) => new { l, a })
-             .OrderBy(@t => t.a.Ticker)
-             .ThenBy(@t => t.l.PurchaseDate)
-             .Select(@t => new LotDto(t.a.Ticker, t.l.PurchaseDate, t.l.QtyRemain, t.l.RawUnitCost, t.l.UnitCost)); 
-         return Results.Ok(lots); 
-     });
+// Lots
+app.MapGet("/lots", async (ILotRepository lotRepo, IAssetRepository assetRepo) =>
+{
+    var lots   = await lotRepo.GetAllAsync();
+    var assets = await assetRepo.GetAllAsync();
 
- app.Run("http://localhost:5255");
+    var result = lots
+        .Join(assets, l => l.AssetId, a => a.Id, (l, a) => new { l, a })
+        .OrderBy(t => t.a.Ticker)
+        .ThenBy(t => t.l.PurchaseDate) // имя свойства даты — подгони под свой домен
+        .Select(t => new LotDto(t.a.Ticker, t.l.PurchaseDate, t.l.QtyRemain, t.l.RawUnitCost, t.l.UnitCost));
 
+    return Results.Ok(result);
+});
+
+app.Run("http://localhost:5255");

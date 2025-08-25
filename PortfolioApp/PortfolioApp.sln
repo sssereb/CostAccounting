@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PortfolioApp.Web", "Portfol
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PortfolioApp.Tests", "PortfolioApp.Tests\PortfolioApp.Tests.csproj", "{B88B1111-4A75-4B20-90F8-56E044C9EFF7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PortfolioApp.Infrastructure.EfCore", "PortfolioApp.Infrastructure.EfCore\PortfolioApp.Infrastructure.EfCore.csproj", "{89CB3D7A-C34D-49AC-9F8A-39960751FC68}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PortfolioApp.DbUpdater", "PortfolioApp.DbUpdater\PortfolioApp.DbUpdater.csproj", "{1453C174-F284-4291-AA8D-EEC8356909FC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -83,6 +87,30 @@ Global
 		{B88B1111-4A75-4B20-90F8-56E044C9EFF7}.Release|x64.Build.0 = Release|Any CPU
 		{B88B1111-4A75-4B20-90F8-56E044C9EFF7}.Release|x86.ActiveCfg = Release|Any CPU
 		{B88B1111-4A75-4B20-90F8-56E044C9EFF7}.Release|x86.Build.0 = Release|Any CPU
+		{89CB3D7A-C34D-49AC-9F8A-39960751FC68}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{89CB3D7A-C34D-49AC-9F8A-39960751FC68}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{89CB3D7A-C34D-49AC-9F8A-39960751FC68}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{89CB3D7A-C34D-49AC-9F8A-39960751FC68}.Debug|x64.Build.0 = Debug|Any CPU
+		{89CB3D7A-C34D-49AC-9F8A-39960751FC68}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{89CB3D7A-C34D-49AC-9F8A-39960751FC68}.Debug|x86.Build.0 = Debug|Any CPU
+		{89CB3D7A-C34D-49AC-9F8A-39960751FC68}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{89CB3D7A-C34D-49AC-9F8A-39960751FC68}.Release|Any CPU.Build.0 = Release|Any CPU
+		{89CB3D7A-C34D-49AC-9F8A-39960751FC68}.Release|x64.ActiveCfg = Release|Any CPU
+		{89CB3D7A-C34D-49AC-9F8A-39960751FC68}.Release|x64.Build.0 = Release|Any CPU
+		{89CB3D7A-C34D-49AC-9F8A-39960751FC68}.Release|x86.ActiveCfg = Release|Any CPU
+		{89CB3D7A-C34D-49AC-9F8A-39960751FC68}.Release|x86.Build.0 = Release|Any CPU
+		{1453C174-F284-4291-AA8D-EEC8356909FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1453C174-F284-4291-AA8D-EEC8356909FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1453C174-F284-4291-AA8D-EEC8356909FC}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{1453C174-F284-4291-AA8D-EEC8356909FC}.Debug|x64.Build.0 = Debug|Any CPU
+		{1453C174-F284-4291-AA8D-EEC8356909FC}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1453C174-F284-4291-AA8D-EEC8356909FC}.Debug|x86.Build.0 = Debug|Any CPU
+		{1453C174-F284-4291-AA8D-EEC8356909FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1453C174-F284-4291-AA8D-EEC8356909FC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1453C174-F284-4291-AA8D-EEC8356909FC}.Release|x64.ActiveCfg = Release|Any CPU
+		{1453C174-F284-4291-AA8D-EEC8356909FC}.Release|x64.Build.0 = Release|Any CPU
+		{1453C174-F284-4291-AA8D-EEC8356909FC}.Release|x86.ActiveCfg = Release|Any CPU
+		{1453C174-F284-4291-AA8D-EEC8356909FC}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
