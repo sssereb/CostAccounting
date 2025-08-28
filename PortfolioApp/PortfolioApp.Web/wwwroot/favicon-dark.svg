@@ -1,0 +1,6 @@
+<!-- public/favicon-dark.svg -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Portfolio favicon dark">
+  <rect x="1" y="1" width="30" height="30" rx="7" fill="#8B5CF6"/>
+  <path d="M6 21 L12 15 L17 18 L24 10 L27 12" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="24" cy="10" r="2" fill="white"/>
+</svg>

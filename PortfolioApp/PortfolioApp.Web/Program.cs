@@ -165,8 +165,22 @@ app.MapPost("/trades/sell", async (SellRequestDto dto, IAssetRepository repo, Tr
     }
     else return Results.BadRequest(new { error = "assetId or ticker required" });
 
-    var res = await svc.SellAsync(assetId, dto.Qty, dto.Price, dto.Method, dto.Date);
-    return Results.Ok(res);
+    try
+    {
+        var res = await svc.SellAsync(assetId, dto.Qty, dto.Price, dto.Method, dto.Date);
+        return Results.Ok(res);
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.Problem(
+            title: "Sell rejected",
+            detail: ex.Message,
+            statusCode: 409);
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem(title: "Sell failed", detail: ex.Message, statusCode: 500);
+    }
 });
 
 // Lots
@@ -192,8 +206,8 @@ app.MapGet("/trades/all", async (ITradeRepository tradeRepo, IAssetRepository as
 
     var result = trades
         .Join(assets, t => t.AssetId, a => a.Id, (t, a) => new { t, a })
-        .OrderBy(t => t.a.Ticker)
-        .ThenBy(t => t.t.Date) 
+        .OrderBy(t => t.t.Date)
+        .ThenBy(t => t.a.Ticker) 
         .Select(t => new TradeDto(t.a.Ticker, t.t.Date, t.t.Quantity, t.t.Price, t.t.ProfitGross, t.t.ProfitNet ));
 
     return Results.Ok(result);

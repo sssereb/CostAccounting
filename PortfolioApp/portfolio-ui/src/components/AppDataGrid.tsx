@@ -33,7 +33,7 @@ export default function AppDataGrid<R extends GridValidRowModel = any>(
       density="compact"
       disableRowSelectionOnClick
       slotProps={{
-        toolbar: { showQuickFilter: true, quickFilterProps: { debounceMs: 300 } },
+        toolbar: { showQuickFilter: true, quickFilterProps: { debounceMs: 300 }},
       }}
 
       pageSizeOptions={pageSizeOptions ?? [10, 25, 50, 100]}
@@ -57,3 +57,4 @@ export default function AppDataGrid<R extends GridValidRowModel = any>(
 
   return grid;
 }
+

@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://localhost:5255",   // порт твоего ASP.NET Core
+        target: "http://localhost:5255",   
         changeOrigin: true,
         rewrite: p => p.replace(/^\/api/, "")
       }

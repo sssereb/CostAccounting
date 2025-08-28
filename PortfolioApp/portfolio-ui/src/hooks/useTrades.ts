@@ -1,5 +1,5 @@
 import { http } from "../lib/http";
-import { useDebounce } from "./useDebounce";   // относительный путь из той же папки
+import { useDebounce } from "../utils/useDebounce";   // относительный путь из той же папки
 // src/hooks/useTrades.ts
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -16,7 +16,7 @@ export type BuyRequestDto = {
   date:     string;
 };
 export type SellRequestDto = {
-  assetId: string;
+  assetId?: string;
   qty:     number;
   price:   number;
   method:  "FIFO" | "LIFO" | "AverageCost";

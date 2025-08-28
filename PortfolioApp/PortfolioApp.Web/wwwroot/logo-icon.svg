@@ -1,0 +1,25 @@
+<!-- public/logo-icon.svg -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Portfolio logo">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%"  stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- фон -->
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#g)"/>
+
+  <!-- сетка (тонкая), можно убрать если не нужно -->
+  <g opacity="0.20" stroke="white" stroke-width="0.6">
+    <path d="M14 18 H50M14 30 H50M14 42 H50" />
+    <path d="M20 14 V50M32 14 V50M44 14 V50" />
+  </g>
+
+  <!-- линия роста -->
+  <path d="M16 40 L26 32 L34 36 L44 24 L50 28"
+        fill="none" stroke="white" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- акцентная точка на пике -->
+  <circle cx="44" cy="24" r="2.8" fill="white"/>
+</svg>

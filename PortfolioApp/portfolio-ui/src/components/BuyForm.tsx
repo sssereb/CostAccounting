@@ -1,96 +1,141 @@
+// src/components/BuyForm.tsx
 import { useState } from "react";
-import { useAssetId, useBuy } from "../hooks/useTrades";
+import {
+  Stack,
+  TextField,
+  Button,
+  Autocomplete,
+  Box,
+  Alert,
+} from "@mui/material";
+import {
+  useBuy,
+  useAssetId,
+  useAssets,
+  type Asset,
+} from "../hooks/useTrades";          // подправь путь если у тебя иначе
+import type { BuyRequestDto } from "../api/types"; // подправь путь если нужно
+import { useDebounce } from "../utils/useDebounce"; // подправь путь если нужно
 
-// helper: yyyy-MM-dd string for today
-const todayIsoDate = () => new Date().toISOString().slice(0, 10);
+// Можно вынести в src/utils/date.ts
+const todayIsoDate = () => new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
+const isoFromDateInput = (yyyyMmDd: string) => `${yyyyMmDd}T00:00:00`;
 
-export function BuyForm() {
+export default function BuyForm() {
   const [ticker, setTicker] = useState("");
   const [qty, setQty] = useState<number>(0);
   const [price, setPrice] = useState<number>(0);
-  const [date, setDate] = useState(todayIsoDate());
+  const [date, setDate] = useState<string>(todayIsoDate());
 
-  const assetIdQ = useAssetId(ticker.trim().toUpperCase());
+  // все активы для выпадающего списка
+  const assetsQ = useAssets();
+  const assets = (assetsQ.data ?? []) as Asset[];
+
+  // по введённому тикеру ищем assetId (если уже существует)
+  const debouncedTicker = useDebounce(ticker.trim().toUpperCase(), 300);
+  const assetIdQ = useAssetId(debouncedTicker);
   const buy = useBuy();
 
-  const canBuy = ticker.trim() !== "" && qty > 0 && price > 0 && !buy.isPending;
+  const canBuy =
+    debouncedTicker.length > 0 && qty > 0 && price > 0 && !buy.isPending;
 
   const handleBuy = () => {
     if (!canBuy) return;
-    buy.mutate(
-      {
-        ticker: ticker.trim().toUpperCase(),
-        assetId: assetIdQ.isSuccess ? assetIdQ.data : undefined,
-        qty,
-        price,
-        date: new Date(date).toISOString(),
-      },
-      {
-        onSuccess: () => {
-          setQty(0);
-          setPrice(0);
-        },
-      }
-    );
+
+    const base = { qty, price, date: isoFromDateInput(date) };
+
+    // если нашли существующий assetId — шлём его; иначе — шлём тикер для создания
+    const dto: BuyRequestDto = assetIdQ.data
+      ? { ...base, assetId: assetIdQ.data }
+      : { ...base, ticker: debouncedTicker };
+
+    buy.mutate(dto);
   };
 
+  // текущее выбранное значение для Autocomplete (объект)
+  const selectedAsset =
+    assets.find((a) => a.ticker.toUpperCase() === ticker.toUpperCase()) ?? null;
+
+  const willCreate =
+    !!ticker && !assetIdQ.isLoading && (assetIdQ.data ?? "") === "";
+
   return (
-    <section className="p-4 border rounded" style={{ minWidth: 650 }}>
-      <h3 className="mb-2">Buy asset</h3>
-
-      {/* ── одна строка, без переноса ── */}
-      <div style={{ display: "flex", gap: 8 }}>
-          <input
-            value={ticker}
-            onChange={(e) => setTicker(e.target.value.toUpperCase())}
-            placeholder="Ticker"
-          />
-          
-
-          <input
-            type="number"
-            value={qty}
-            onChange={(e) => setQty(+e.target.value)}
-            min={1}
-          />
-
-          <input
-            type="number"
-            value={price}
-            onChange={(e) => setPrice(+e.target.value)}
-            min={0.01}
-            step="0.01"
-          />
-
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-          />
-
-        <button
-          onClick={handleBuy}
-          disabled={!canBuy}
-          className={`px-4 py-2 h-[38px] rounded self-end shrink-0 ${canBuy ? "bg-indigo-600 hover:bg-indigo-700" : "bg-gray-600 cursor-not-allowed"}`}
-        >
-          {buy.isPending ? "Saving…" : "Buy"}
-        </button>
-      </div>
-
-      {/* подсказки */}
-      <div className="mt-2 text-sm">
-        {assetIdQ.isLoading && ticker && <p>🔍 checking ticker…</p>}
-        {assetIdQ.isSuccess && <p className="text-green-400">Ticker exists</p>}
-        {assetIdQ.isError && ticker && (
-          <p className="text-yellow-400">New ticker will be created</p>
+    <Stack direction="row" spacing={2} alignItems="center" useFlexGap flexWrap="wrap">
+      {/* Ticker как выпадающий список + свободный ввод */}
+      <Autocomplete<Asset, false, false, true>
+        freeSolo
+        options={assets}
+        value={selectedAsset}
+        loading={assetsQ.isLoading}
+        getOptionLabel={(o) => (typeof o === "string" ? o : o.ticker)}
+        isOptionEqualToValue={(opt, val) => opt.ticker === val.ticker}
+        onChange={(_, val) => setTicker((val as Asset | null)?.ticker?.toUpperCase() ?? "")}
+        inputValue={ticker}
+        onInputChange={(_, val) => setTicker((val ?? "").toUpperCase())}
+        renderOption={(props, opt) => (
+          <li {...props} key={opt.ticker}>
+            <Box sx={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
+              <span>{opt.ticker}</span>
+              {"qtyRemain" in opt ? (
+                <span style={{ opacity: 0.7 }}>{(opt as any).qtyRemain}</span>
+              ) : null}
+            </Box>
+          </li>
         )}
-        {buy.isSuccess && <p className="text-green-400">✓ Buy recorded</p>}
-        {buy.isError && (
-          <pre className="text-red-400 whitespace-pre-wrap">
-            {JSON.stringify((buy.error as any).response?.data ?? buy.error, null, 2)}
-          </pre>
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            label="Ticker"
+            size="small"
+            placeholder="MSFT"
+            inputProps={{ ...params.inputProps, maxLength: 10 }}
+          />
         )}
-      </div>
-    </section>
+        sx={{ minWidth: 220 }}
+      />
+
+      <TextField
+        label="Qty"
+        size="small"
+        type="number"
+        value={qty}
+        onChange={(e) => setQty(Number(e.target.value) || 0)}
+        inputProps={{ min: 0, step: 1 }}
+      />
+
+      <TextField
+        label="Price"
+        size="small"
+        type="number"
+        value={price}
+        onChange={(e) => setPrice(Number(e.target.value) || 0)}
+        inputProps={{ min: 0, step: "0.01" }}
+      />
+
+      <TextField
+        label="Date"
+        size="small"
+        type="date"
+        value={date}
+        onChange={(e) => setDate(e.target.value)}
+        InputLabelProps={{ shrink: true }}
+      />
+
+      <Button variant="contained" disabled={!canBuy} onClick={handleBuy}>
+        {buy.isPending ? "Buying…" : "Buy"}
+      </Button>
+
+      {buy.isError && (
+        <Alert severity="error" sx={{ ml: 1 }}>
+          Ошибка покупки
+        </Alert>
+      )}
+
+      {willCreate && (
+        <Alert severity="info" variant="outlined" icon={false} sx={{ py: 0.5, px: 1 }}>
+          New ticker will be created
+        </Alert>
+      )}
+    </Stack>
   );
 }

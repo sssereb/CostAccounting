@@ -11,7 +11,8 @@ export default function App() {
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
       <Container maxWidth={false} sx={{ py: 2 }}>
-        <PortfolioTabs />
+        
+      <PortfolioTabs />
       </Container>
     </ThemeProvider>
   );
