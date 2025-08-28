@@ -1,54 +1,78 @@
-// src/components/LotsGrid.tsx
-import { useLots } from "../hooks/useTrades";
-import { format }  from "date-fns";
+import { DataGrid } from '@mui/x-data-grid';
+import type { GridColDef } from '@mui/x-data-grid';
+import { format } from 'date-fns';
+import { useLots } from '../hooks/useTrades';
+
+// --- safe date helpers ---
+function toDateSafe(d: string | number | Date | null) {
+  if (d == null) return null;
+  const dt = d instanceof Date ? d : new Date(d);
+  return isNaN(dt.getTime()) ? null : dt;
+}
+function formatYMD(d: string | number | Date | null) {
+  const dt = toDateSafe(d);
+  return dt ? format(dt, 'yyyy-MM-dd') : '';
+}
+
+type Lot = {
+  id?: string | number;
+  ticker: string;
+  purchaseDate: string | Date;
+  qtyRemain: number;
+  unitCost: number;
+};
 
 export function LotsGrid() {
   const { data = [], isLoading, error, refetch } = useLots();
 
   if (isLoading) return <p>Loading lots…</p>;
-  if (error)     return (
-    <p className="text-red-500">
-      Failed to load lots —
-      <button onClick={() => refetch()} className="underline ml-1">retry</button>
-    </p>
-  );
+  if (error)
+    return (
+      <p className="text-red-500">
+        Failed to load lots —
+        <button onClick={() => refetch()} className="underline ml-1">
+          retry
+        </button>
+      </p>
+    );
+  if (!data || data.length === 0) return <p>(no lots yet)</p>;
 
-  if (data.length === 0) return <p>(no lots yet)</p>;
+  const rows = data as Lot[];
+
+  const columns: GridColDef<Lot>[] = [
+    { field: 'ticker', 
+      headerName: 'Ticker', 
+      flex: 1 
+    },
+
+    { field: 'purchaseDate', 
+      headerName: 'Purchase Date', 
+      flex: 1 
+    },
+    {
+      field: 'qtyRemain',
+      headerName: 'Qty',
+      type: 'number',
+      flex: 1 
+    },
+    {
+      field: 'unitCost',
+      headerName: 'Unit cost',
+      type: 'number',
+      flex: 1 
+    },
+  ];
 
   return (
-    <section className="p-4 border rounded min-w-[320px]">
-      <h3 className="mb-2">Lots</h3>
-
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse text-sm">
-          <thead className="bg-gray-700">
-            <tr className="text-left text-gray-200">
-              <th className="px-2 py-1">Ticker</th>
-              <th className="px-2 py-1">Date</th>
-              <th className="px-2 py-1 text-right">Qty</th>
-              <th className="px-2 py-1 text-right">Unit cost</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {data.map((lot, i) => (
-              <tr
-                key={i}
-                className={i % 2 ? "bg-gray-800" : "bg-gray-900"}
-              >
-                <td className="px-2 py-1">{lot.ticker}</td>
-                <td className="px-2 py-1">
-                  {format(new Date(lot.purchaseDate), "yyyy-MM-dd")}
-                </td>
-                <td className="px-2 py-1 text-right">{lot.qtyRemain}</td>
-                <td className="px-2 py-1 text-right">
-                  {lot.unitCost.toFixed(2)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </section>
+    <div style={{ display: 'flex', flex: 1, width: '100%' }}>
+      <DataGrid
+        rows={rows}
+        columns={columns}
+        getRowId={(row) => row.id ?? `${row.ticker}-${formatYMD(row.purchaseDate)}-${row.qtyRemain}-${row.unitCost}` }
+        initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
+        pageSizeOptions={[5, 10, 25]}
+        style={{ flex: 1 }}
+      />
+    </div>
   );
 }

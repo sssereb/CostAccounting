@@ -1,26 +1,50 @@
 // src/components/AssetsList.tsx
-import { useAssets } from "../hooks/useTrades";
+import { useAssets, type Asset } from "../hooks/useTrades";
+import { DataGrid } from '@mui/x-data-grid';
+import type { GridColDef } from '@mui/x-data-grid';
+
+
 
 export function AssetsList() {
-  const { data, isLoading, error } = useAssets();
+  const { data = [], isLoading, error, refetch } = useAssets();
 
-  if (isLoading) return <p>Loading assets…</p>;
-  if (error)     return <p style={{color:"red"}}>{String(error)}</p>;
+  if (isLoading) return <p>Loading assets</p>;
+  if (error)
+    return (
+      <p className="text-red-500">
+        Failed to load assets —
+        <button onClick={() => refetch()} className="underline ml-1">
+          retry
+        </button>
+      </p>
+    );
+  if (!data || data.length === 0) return <p>(no assets yet)</p>;
+
+  const rows = data as Asset[];
+
+  const columns: GridColDef<Asset>[] = [
+    { field: 'ticker', 
+      headerName: 'Ticker', 
+      flex: 1 
+    },
+
+    { field: 'id', 
+      headerName: 'Guid', 
+      flex: 1 
+    }
+  ];
 
   return (
-    <section className="p-4 border rounded" style={{minWidth: 300}}>
-      <h3>Assets</h3>
-      <table border={1} cellPadding={4}>
-        <thead><tr><th>Ticker</th><th>Id</th></tr></thead>
-        <tbody>
-          {data!.map(a => (
-            <tr key={a.id}>
-              <td>{a.ticker}</td>
-              <td>{a.id}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </section>
+    <div style={{ display: 'flex', flex: 1, width: '100%' }}>
+      <DataGrid
+        rows={rows}
+        columns={columns}
+        getRowId={(row) => row.id ?? `${row.ticker}` }
+        initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
+        pageSizeOptions={[5, 10, 25]}
+        style={{ flex: 1 }}
+      />
+    </div>
   );
 }
+

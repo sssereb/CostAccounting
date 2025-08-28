@@ -23,8 +23,6 @@ export type SellRequestDto = {
   date:    string;
 };
 
-
-
 /* ---------- хук: получить assetId по тикеру ---------- */
 export function useAssetId(ticker: string) {
   const debounced = useDebounce(ticker.trim().toUpperCase(), 400);
