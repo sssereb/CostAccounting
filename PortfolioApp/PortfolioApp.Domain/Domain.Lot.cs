@@ -6,10 +6,11 @@ public class Lot
     public Guid Id { get; } = Guid.NewGuid();
     public Guid AssetId { get; init; }
     public DateTime PurchaseDate { get; init; }
+    public int QtyInitial { get; set; }
     public int QtyRemain { get; set; }
     
-    public decimal RawUnitCost { get; init; } // + Fees
-    public decimal UnitCost { get; init; } // + Fees
+    public decimal RawUnitCost { get; init; } 
+    public decimal UnitCost { get; init; } 
     protected Lot() { }
     public Lot(Guid assetId,
         DateTime dt,
@@ -19,6 +20,7 @@ public class Lot
     {
         AssetId      = assetId;
         PurchaseDate = dt;
+        QtyInitial   = quantity;
         QtyRemain    = quantity;
         RawUnitCost  = rawUnitCost;
         UnitCost     = unitCostIncludingFees;

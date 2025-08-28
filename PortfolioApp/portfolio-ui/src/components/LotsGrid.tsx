@@ -18,6 +18,7 @@ type Lot = {
   id?: string | number;
   ticker: string;
   purchaseDate: string | Date;
+  qtyInitial: number;
   qtyRemain: number;
   unitCost: number;
 };
@@ -50,8 +51,14 @@ export function LotsGrid() {
       flex: 1 
     },
     {
+      field: 'qtyInitial',
+      headerName: 'Qty (initial)',
+      type: 'number',
+      flex: 1 
+    },
+    {
       field: 'qtyRemain',
-      headerName: 'Qty',
+      headerName: 'Qty (remain)',
       type: 'number',
       flex: 1 
     },

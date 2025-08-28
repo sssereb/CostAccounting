@@ -10,7 +10,7 @@ const darkTheme = createTheme({
 export default function App() {
   return (
     <ThemeProvider theme={darkTheme}>
-      <PortfolioTabs />
+        <PortfolioTabs />
     </ThemeProvider>
   );
 }

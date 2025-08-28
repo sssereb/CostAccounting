@@ -9,7 +9,7 @@ namespace PortfolioApp.Tests;
 
 public class CostBasisStrategyTests
 {
-    // ----------------------- позитивные кейсы -----------------------
+    // ----------------------- positive -----------------------
 
     // qty1, cost1, qty2, cost2, sellQty, expectedSoldCostPerShare
     public static IEnumerable<object[]> FifoData => new[]
@@ -51,17 +51,17 @@ public class CostBasisStrategyTests
     public void Avg_Correct(decimal q1, decimal c1, decimal q2, decimal c2, int sellQty, decimal expected)
         => PositiveCase(new AverageCostStrategy(), q1, c1, q2, c2, sellQty, expected);
 
-    // ----------------------- oversell – негативные ----------------------
+    // ----------------------- negative ----------------------
 
-    [Fact(DisplayName = "FIFO: oversell ⇒ Exception + QtyRemain неизменны")]
+    [Fact(DisplayName = "FIFO: oversell ⇒ Exception + QtyRemain unchanged")]
     public void Fifo_Oversell()
         => OversellCase(new FifoStrategy());
 
-    [Fact(DisplayName = "LIFO: oversell ⇒ Exception + QtyRemain неизменны")]
+    [Fact(DisplayName = "LIFO: oversell ⇒ Exception + QtyRemain unchanged")]
     public void Lifo_Oversell()
         => OversellCase(new LifoStrategy());
 
-    [Fact(DisplayName = "AVG: oversell ⇒ Exception + QtyRemain неизменны")]
+    [Fact(DisplayName = "AVG: oversell ⇒ Exception + QtyRemain unchanged")]
     public void Avg_Oversell()
         => OversellCase(new AverageCostStrategy());
 
@@ -79,7 +79,7 @@ public class CostBasisStrategyTests
 
         var res = strategy.Sell(lots, sellQty, sellPrice: 0m);
 
-        Assert.Equal(expSoldCost, res.SoldCostPerShare, 4);          // точность 4 знака
+        Assert.Equal(expSoldCost, res.SoldCostPerShare, 4);          
         Assert.Equal(startQty - sellQty, lots.Sum(l => l.QtyRemain));
     }
 
@@ -91,7 +91,6 @@ public class CostBasisStrategyTests
         var ex = Record.Exception(() => strategy.Sell(lots, 40, 0m));
         Assert.IsType<InvalidOperationException>(ex);
 
-        // ни один QtyRemain не изменился
         foreach (var lot in lots)
             Assert.Equal(snapshot[lot.Id], lot.QtyRemain);
     }
@@ -102,13 +101,11 @@ public class CostBasisStrategyTests
 
         var list = new List<Lot>
         {
-            // «старший» лот
             new(Guid.NewGuid(), today.AddDays(-2), qty1, cost1, cost1)
         };
 
         if (qty2 > 0)
         {
-            // «свежий» лот — первым уйдёт при LIFO
             list.Add(new(Guid.NewGuid(), today.AddDays(-1), qty2, cost2, cost2));
         }
 

@@ -81,3 +81,10 @@ export function useLots()
 { 
   return useQuery({ queryKey: ["lots"], queryFn: () => http.get<Lot[]>("/lots").then(r => r.data) }); 
 }
+
+export type Trade = { id:string; ticker:string; date:string; quantity:number; price:number; profitGross?:number; profitNet?:number };
+
+export function useTrades() 
+{ 
+  return useQuery({ queryKey: ["trades"], queryFn: () => http.get<Trade[]>("/trades/all").then(r => r.data) }); 
+}

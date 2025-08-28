@@ -57,7 +57,7 @@ public class FeeCompositeTests
     [Theory]
     [MemberData(nameof(Cases))]
     public void CalcAll_ReturnsExpected(
-        string           _caseName,      // имя не используется – нужно только для отчёта xUnit
+        string           _caseName,      
         FeeDirection     regDir,
         FeeDirection     callDir,
         bool             addFT,
@@ -65,13 +65,11 @@ public class FeeCompositeTests
         bool             addPV,
         decimal          expected)
     {
-        // формируем правила
         var rules = new List<FeeRegistration>();
         if (addFT) rules.Add(new(FeeType.FixedPerTrade,  10m,   regDir));
         if (addFS) rules.Add(new(FeeType.FixedPerShare,  0.5m,  regDir)); // 0.5 × 100 = 50
         if (addPV) rules.Add(new(FeeType.Percent, 0.01m, regDir)); // 1 %
 
-        // создаём калькуляторы и приводим к IFeeCalculator
         var calcs = rules
             .Where(r => r.Direction == callDir || r.Direction == FeeDirection.Both)
             .Select(r => (IFeeCalculator)CreateCalc(r.Type, r.Amount));

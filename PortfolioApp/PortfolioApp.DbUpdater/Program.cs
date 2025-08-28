@@ -14,7 +14,7 @@ static string GetDefaultDbPath()
 }
 
 // поддерживаем параметр: --db=/полный/путь/к/файлу.db
-string dbPath = args.FirstOrDefault(a => a.StartsWith("--db="))?.Split('=')[1] ?? GetDefaultDbPath();
+var dbPath  = Environment.GetEnvironmentVariable("DB_PATH") ?? GetDefaultDbPath();
 
 using var host = Host.CreateDefaultBuilder(args)
     .ConfigureLogging(lb => lb.ClearProviders().AddConsole())

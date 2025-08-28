@@ -35,7 +35,7 @@ public sealed class TradeService
         var pricePerShare = price + totalFee / qty;
 
         var lot = new Lot(assetId, date, qty, rawUnitCost: price, unitCostIncludingFees: pricePerShare);
-        var trade = new Trade(Guid.NewGuid(), assetId, date, qty, price, fees);
+        var trade = new Trade(Guid.NewGuid(), assetId, date, qty, price, 0,0, fees);
 
         await _trades.AddAsync(trade, ct);
         await _lots.SaveAsync(lot, ct);
@@ -57,7 +57,7 @@ public sealed class TradeService
         foreach (var l in lots)
             await _lots.SaveAsync(l, ct);
 
-        await _trades.AddAsync(new Trade(Guid.NewGuid(), assetId, date, -qty, price, fees), ct);
+        await _trades.AddAsync(new Trade(Guid.NewGuid(), assetId, date, -qty, price, res.GrossProfit, res.GrossProfit - totalFee, fees), ct);
 
         return res with { NetProfit = res.GrossProfit - totalFee };
     }

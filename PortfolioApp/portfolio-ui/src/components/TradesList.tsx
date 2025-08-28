@@ -1,0 +1,73 @@
+// src/components/AssetsList.tsx
+import { useTrades, type Trade } from "../hooks/useTrades";
+import { DataGrid } from '@mui/x-data-grid';
+import type { GridColDef } from '@mui/x-data-grid';
+
+
+
+export function TradesList() {
+  const { data = [], isLoading, error, refetch } = useTrades();
+
+  if (isLoading) return <p>Loading trades</p>;
+  if (error)
+    return (
+      <p className="text-red-500">
+        Failed to load trades —
+        <button onClick={() => refetch()} className="underline ml-1">
+          retry
+        </button>
+      </p>
+    );
+  if (!data || data.length === 0) return <p>(no trades yet)</p>;
+
+  const rows = data as Trade[];
+
+  const columns: GridColDef<Trade>[] = [
+    { field: 'ticker', 
+      headerName: 'Ticker', 
+      flex: 1 
+    },
+    { field: 'date', 
+      headerName: 'Date', 
+      flex: 1 
+    },
+    {
+      field: 'quantity',
+      headerName: 'Quantity',
+      type: 'number',
+      flex: 1 
+    },
+    {
+      field: 'price',
+      headerName: 'Price',
+      type: 'number',
+      flex: 1 
+    },
+    {
+      field: 'profitGross',
+      headerName: 'Profit (gross)',
+      type: 'number',
+      flex: 1 
+    },
+    {
+      field: 'profitNet',
+      headerName: 'Profit (net)',
+      type: 'number',
+      flex: 1 
+    }
+  ];
+
+  return (
+    <div style={{ display: 'flex', flex: 1, width: '100%' }}>
+      <DataGrid
+        rows={rows}
+        columns={columns}
+        getRowId={(row) => row.id ?? `${row.ticker} - ${row.date} - ${row.quantity} - ${row.price}` }
+        initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
+        pageSizeOptions={[5, 10, 25]}
+        style={{ flex: 1 }}
+      />
+    </div>
+  );
+}
+

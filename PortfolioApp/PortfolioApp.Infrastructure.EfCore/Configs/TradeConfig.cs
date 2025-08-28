@@ -46,6 +46,8 @@ public sealed class TradeConfig : IEntityTypeConfiguration<Trade>
         e.Property(x => x.Date).IsRequired();
         e.Property(x => x.Quantity).IsRequired();
         e.Property(x => x.Price).IsRequired();
+        e.Property(x => x.ProfitGross).IsRequired();
+        e.Property(x => x.ProfitNet).IsRequired();
 
         // само свойство
         e.Property(x => x.Fees)

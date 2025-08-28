@@ -17,7 +17,7 @@ public sealed class EfDbMigrator : IDbMigrator
     public async Task MigrateAsync(CancellationToken ct = default)
     {
         _log.LogInformation("Applying EF Core migrations…");
-        await _db.Database.MigrateAsync(ct);           // создаст/обновит схему по миграциям
+        await _db.Database.MigrateAsync(ct);      
         _log.LogInformation("Migrations applied.");
 
     }

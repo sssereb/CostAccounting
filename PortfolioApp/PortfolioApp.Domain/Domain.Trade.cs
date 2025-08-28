@@ -1,4 +1,12 @@
 ﻿
 namespace PortfolioApp.Domain;
 
-public record Trade(Guid Id, Guid AssetId, DateTime Date, int Quantity, decimal Price, IReadOnlyList<Fee>? Fees = null);
+public record Trade(
+    Guid Id,
+    Guid AssetId,
+    DateTime Date,
+    int Quantity,
+    decimal Price,
+    decimal ProfitGross,
+    decimal ProfitNet,
+    IReadOnlyList<Fee>? Fees = null);

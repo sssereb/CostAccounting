@@ -10,7 +10,6 @@ public class InMemoryLotRepository : ILotRepository
 
     public Task<IReadOnlyList<Lot>> GetForAssetAsync(Guid assetId, CancellationToken ct = default)
     {
-        // для предсказуемости сортируем по дате покупки (полезно для FIFO)
         var list = _lotsById.Values
             .Where(l => l.AssetId == assetId)
             .OrderBy(l => l.PurchaseDate)

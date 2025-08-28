@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 
 import { AssetsList }   from "../components/AssetsList";
+import { TradesList }   from "../components/TradesList";
 import { LotsGrid }     from "../components/LotsGrid";
 import { BuyForm }      from "../components/BuyForm";
 import { SellForm }     from "../components/SellForm";
@@ -96,8 +97,8 @@ function TabsUrl({ items, queryKey = "tab", initialId }: {
 export default function PortfolioTabs() {
   const items: TabItem[] = [
     {
-      id: "trade",
-      label: "Trade",
+      id: "trading",
+      label: "Trading",
       content: (
         <section className="space-y-4">
           <h2 className="text-xl font-semibold">Sell / Buy</h2>
@@ -105,6 +106,16 @@ export default function PortfolioTabs() {
               <SellForm />
           <h2 className="text-xl font-semibold">Lots</h2>
           <LotsGrid />
+        </section>
+      ),
+    },
+    {
+      id: "trade",
+      label: "Trades",
+      content: (
+        <section className="space-y-4">
+          <h2 className="text-xl font-semibold">Trade (History)</h2>
+          <TradesList />
         </section>
       ),
     },

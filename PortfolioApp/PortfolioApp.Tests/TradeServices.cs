@@ -17,9 +17,6 @@ namespace PortfolioApp.Tests;
 
 public class TradeServiceTests
 {
-    /* ----------------------------------------------------------------
-     * “Порожній” FeeComposite: усі калькулятори повертають 0 комісій
-     * --------------------------------------------------------------*/
     private static FeeComposite ZeroFeeComposite() => new(
         new[]
         {
@@ -30,9 +27,9 @@ public class TradeServiceTests
     );
 
     /* ----------------------------------------------------------------
-     * BUY: успішна покупка
+     * BUY: 
      * --------------------------------------------------------------*/
-    [Fact(DisplayName = "Buy: сохраняет Lot и Trade с корректными полями")]
+    [Fact(DisplayName = "Buy: Lot & Trade saved with proper fields")]
     public async Task Buy_SavesLotAndTrade()
     {
         var assetId = Guid.NewGuid();
@@ -41,9 +38,9 @@ public class TradeServiceTests
         var date = new DateTime(2025, 7, 20);
 
         var assets = new Mock<IAssetRepository>();
-#pragma warning disable SYSLIB0050
+        
         var dummyAsset = (Asset)FormatterServices.GetUninitializedObject(typeof(Asset));
-#pragma warning restore SYSLIB0050
+        
         assets.Setup(r => r.GetAsync(assetId, It.IsAny<CancellationToken>()))
               .ReturnsAsync(dummyAsset);
 
@@ -66,10 +63,7 @@ public class TradeServiceTests
             Mock.Of<ICostBasisFactory>(),
             feeSvc.Object);
 
-        // act
         await service.BuyAsync(assetId, qty, price, date);
-
-        // assert
         assets.Verify(r => r.GetAsync(assetId, It.IsAny<CancellationToken>()), Times.Once);
 
         tradeRepo.Verify(r => r.AddAsync(It.Is<Trade>(t =>
@@ -81,16 +75,14 @@ public class TradeServiceTests
         Assert.NotNull(storedLot);
         Assert.Equal(assetId, storedLot!.AssetId);
         Assert.Equal(qty,  storedLot.QtyRemain);
-        Assert.Equal(price,storedLot.UnitCost);   // комиссий нет
-
-        // имя свойства даты: если у тебя BuyDateUtc — замени ниже на BuyDateUtc
+        Assert.Equal(price,storedLot.UnitCost);   
         Assert.Equal(date, storedLot.PurchaseDate);
     }
 
     /* ----------------------------------------------------------------
-     * BUY: Asset не найден
+     * BUY: Asset not found
      * --------------------------------------------------------------*/
-    [Fact(DisplayName = "Buy: Asset отсутствует → InvalidOperationException")]
+    [Fact(DisplayName = "Buy: Asset not found → InvalidOperationException")]
     public async Task Buy_Throws_When_AssetMissing()
     {
         var assets = new Mock<IAssetRepository>();
@@ -109,9 +101,9 @@ public class TradeServiceTests
     }
 
     /* ----------------------------------------------------------------
-     * SELL: orchestration — стратегия, сохранения, Trade, NetProfit
+     * SELL: "Sell: Lot & Trade saved with proper fields"
      * --------------------------------------------------------------*/
-    [Fact(DisplayName = "Sell: корректно сохраняет изменения и считает NetProfit")]
+    [Fact(DisplayName = "Sell: proper NetProfit")]
     public async Task Sell_PersistsEverything()
     {
         var assetId = Guid.NewGuid();
@@ -128,7 +120,6 @@ public class TradeServiceTests
         tradeRepo.Setup(r => r.AddAsync(It.IsAny<Trade>(), It.IsAny<CancellationToken>()))
                  .Returns(Task.CompletedTask);
 
-        // заглушка стратегии
         var stub = new SaleResult(
             RemainingShares: 0,
             SoldCostPerShare: 95m,
@@ -154,11 +145,8 @@ public class TradeServiceTests
             factory.Object,
             feeSvc.Object);
 
-        // act
         var res = await service.SellAsync(assetId, 50, 100m, CostBasisMethod.FIFO, DateTime.Today);
-
-        // assert
-        Assert.Equal(stub.GrossProfit, res.NetProfit);  // fee = 0
+        Assert.Equal(stub.GrossProfit, res.NetProfit);  
 
         lotsRepo.Verify(r => r.SaveAsync(It.IsAny<Lot>(), It.IsAny<CancellationToken>()),
                         Times.AtLeastOnce());

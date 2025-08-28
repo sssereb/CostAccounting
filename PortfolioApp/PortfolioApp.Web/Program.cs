@@ -10,7 +10,6 @@ using PortfolioApp.Infrastructure.EfCore; // <-- AddPortfolioEfCoreSqlite
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ── DB path (env var DB_PATH или дефолт под профилем пользователя)
 string GetDefaultDbPath()
 {
     var root = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
@@ -22,7 +21,7 @@ string GetDefaultDbPath()
 
 // ── DI
 builder.Services
-    .AddPortfolioCore();                 // ваше ядро (FeeService/TradeService и т.д.)
+    .AddPortfolioCore();                 
    
         
 var storageEnv = Environment.GetEnvironmentVariable("PORTFOLIO_STORAGE") ?? "Sqlite"; // "Sqlite" | "InMemory"
@@ -160,8 +159,23 @@ app.MapGet("/lots", async (ILotRepository lotRepo, IAssetRepository assetRepo) =
     var result = lots
         .Join(assets, l => l.AssetId, a => a.Id, (l, a) => new { l, a })
         .OrderBy(t => t.a.Ticker)
-        .ThenBy(t => t.l.PurchaseDate) // имя свойства даты — подгони под свой домен
-        .Select(t => new LotDto(t.a.Ticker, t.l.PurchaseDate, t.l.QtyRemain, t.l.RawUnitCost, t.l.UnitCost));
+        .ThenBy(t => t.l.PurchaseDate) 
+        .Select(t => new LotDto(t.a.Ticker, t.l.PurchaseDate, t.l.QtyInitial, t.l.QtyRemain, t.l.RawUnitCost, t.l.UnitCost));
+
+    return Results.Ok(result);
+});
+
+// Trades
+app.MapGet("/trades/all", async (ITradeRepository tradeRepo, IAssetRepository assetRepo) =>
+{
+    var trades   = await tradeRepo.GetAllAsync();
+    var assets = await assetRepo.GetAllAsync();
+
+    var result = trades
+        .Join(assets, t => t.AssetId, a => a.Id, (t, a) => new { t, a })
+        .OrderBy(t => t.a.Ticker)
+        .ThenBy(t => t.t.Date) 
+        .Select(t => new TradeDto(t.a.Ticker, t.t.Date, t.t.Quantity, t.t.Price, t.t.ProfitGross, t.t.ProfitNet ));
 
     return Results.Ok(result);
 });
