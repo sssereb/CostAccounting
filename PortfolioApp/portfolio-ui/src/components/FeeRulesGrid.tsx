@@ -1,5 +1,5 @@
 import { useFeeRules } from '../hooks/useFeeRules';
-import { DataGrid } from '@mui/x-data-grid';
+import AppDataGrid from "./AppDataGrid";
 import type { GridColDef } from '@mui/x-data-grid';
 
 /* ---- DTO ---- */
@@ -50,12 +50,11 @@ export default function FeeRulesGrid() {
   ];
 
   return (
-    <div style={{ display: 'flex', flex: 1, width: '100%' }}>
-      <DataGrid
+    <div style={{ width: '100%' }}>
+      <AppDataGrid
         rows={rows}
         columns={columns}
         getRowId={(row) => `${row.type}-${row.amount}-${row.direction}`}
-        style={{ flex: 1 }}
       />
     </div>
   );

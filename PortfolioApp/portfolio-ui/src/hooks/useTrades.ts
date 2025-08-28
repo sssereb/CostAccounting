@@ -73,7 +73,7 @@ export function useAssets() {
   return useQuery({ queryKey: ["assets"], queryFn: () => http.get<Asset[]>("/assets").then(r => r.data) }); 
 } 
 
-export type Asset = { id: string; ticker: string };
+export type Asset = { ticker: string, qtyRemaining: number, lastPrice: number };
 
 export type Lot = { ticker:string; purchaseDate:string; qtyRemain:number; unitCost:number }; 
 

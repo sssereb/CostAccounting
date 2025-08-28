@@ -13,6 +13,7 @@ namespace PortfolioApp.Application.DTOs
         CostBasisMethod Method,
         DateTime Date);
 
+    public record AssetDto(string Ticker, int QtyRemaining, decimal LastPrice);
     public record LotDto(
         string Ticker,
         DateTime PurchaseDate,

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.Build.NoTargets/3.7.0">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <NpmCli>npm</NpmCli>
+    <FrontendDir>$(MSBuildThisFileDirectory)</FrontendDir>
+  </PropertyGroup>
+
+  <Target Name="NpmInstall" BeforeTargets="Build;Restore">
+    <Message Text="Running npm ci in $(FrontendDir)" Importance="high" />
+    <Exec WorkingDirectory="$(FrontendDir)" Command="$(NpmCli) ci" />
+  </Target>
+
+  <Target Name="NpmBuild" AfterTargets="Build" DependsOnTargets="NpmInstall">
+    <Message Text="Running npm run build" Importance="high" />
+    <Exec WorkingDirectory="$(FrontendDir)" Command="$(NpmCli) run build" />
+  </Target>
+
+  <ItemGroup>
+    <Content Include="dist\**\*" />
+  </ItemGroup>
+</Project>

@@ -19,4 +19,27 @@
 
   <PropertyGroup Condition=" '$(RunConfiguration)' == 'https' " />
   <PropertyGroup Condition=" '$(RunConfiguration)' == 'http' " />
+
+  <ItemGroup>
+    <ProjectReference Include="..\portfolio-ui\portfolio-ui.csproj" />
+  </ItemGroup>
+
+  <Target Name="CopyFrontendToWwwroot" AfterTargets="Build">
+    <ItemGroup>
+      <FrontendDist Include="..\portfolio-ui\dist\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(FrontendDist)"
+          DestinationFolder="wwwroot\%(RecursiveDir)"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="CopyFrontendOnPublish" AfterTargets="Publish">
+    <ItemGroup>
+      <FrontendDist Include="..\portfolio-ui\dist\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(FrontendDist)"
+          DestinationFolder="$(PublishDir)wwwroot\%(RecursiveDir)"
+          SkipUnchangedFiles="true" />
+  </Target>
+
 </Project>

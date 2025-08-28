@@ -125,12 +125,12 @@ export default function PortfolioTabs() {
       content: (
         <section className="space-y-4">
           <div>
-            <h2 className="text-xl font-semibold">Assets</h2>
-            <AssetsList />
-          </div>
-          <div>
             <h2 className="text-xl font-semibold">Fee Rules</h2>
             <FeeRulesGrid />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold">Assets</h2>
+            <AssetsList />
           </div>
         </section>
       ),
@@ -138,8 +138,8 @@ export default function PortfolioTabs() {
   ];
 
   return (
-    <main className="max-w-5xl mx-auto py-6">
+    <div style={{width: '100%'}}>
       <TabsUrl items={items} queryKey="tab" initialId="trade" />
-    </main>
+    </div>
   );
 }

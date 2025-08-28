@@ -1,7 +1,7 @@
 // src/components/AssetsList.tsx
 import { useAssets, type Asset } from "../hooks/useTrades";
-import { DataGrid } from '@mui/x-data-grid';
 import type { GridColDef } from '@mui/x-data-grid';
+import AppDataGrid from "./AppDataGrid";
 
 
 
@@ -24,25 +24,27 @@ export function AssetsList() {
 
   const columns: GridColDef<Asset>[] = [
     { field: 'ticker', 
-      headerName: 'Ticker', 
-      flex: 1 
+      headerName: 'Ticker',
+      flex: 1,
     },
 
-    { field: 'id', 
-      headerName: 'Guid', 
-      flex: 1 
+    { field: 'qtyRemaining', 
+      headerName: 'Quantity (remaining)',
+      flex: 1,
+    },
+
+    { field: 'lastPrice', 
+      headerName: 'Last Price',
+      flex: 1,
     }
   ];
 
   return (
-    <div style={{ display: 'flex', flex: 1, width: '100%' }}>
-      <DataGrid
+    <div style={{ width: '100%' }}>
+      <AppDataGrid
         rows={rows}
         columns={columns}
-        getRowId={(row) => row.id ?? `${row.ticker}` }
-        initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
-        pageSizeOptions={[5, 10, 25]}
-        style={{ flex: 1 }}
+        getRowId={(row) => `${row.ticker}-${row.qtyRemaining}-${row.lastPrice}` }
       />
     </div>
   );

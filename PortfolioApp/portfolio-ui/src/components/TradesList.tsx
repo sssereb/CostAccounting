@@ -1,8 +1,7 @@
-// src/components/AssetsList.tsx
+// src/components/TradesList.tsx
 import { useTrades, type Trade } from "../hooks/useTrades";
-import { DataGrid } from '@mui/x-data-grid';
+import AppDataGrid from "./AppDataGrid";
 import type { GridColDef } from '@mui/x-data-grid';
-
 
 
 export function TradesList() {
@@ -24,48 +23,46 @@ export function TradesList() {
 
   const columns: GridColDef<Trade>[] = [
     { field: 'ticker', 
-      headerName: 'Ticker', 
-      flex: 1 
+      headerName: 'Ticker',
+      flex: 1,
     },
     { field: 'date', 
-      headerName: 'Date', 
-      flex: 1 
+      headerName: 'Date',
+      flex: 1,
+      
     },
     {
       field: 'quantity',
       headerName: 'Quantity',
       type: 'number',
-      flex: 1 
+      flex: 1,
     },
     {
       field: 'price',
       headerName: 'Price',
       type: 'number',
-      flex: 1 
+      flex: 1,
     },
     {
       field: 'profitGross',
       headerName: 'Profit (gross)',
       type: 'number',
-      flex: 1 
+      flex: 1,
     },
     {
       field: 'profitNet',
       headerName: 'Profit (net)',
       type: 'number',
-      flex: 1 
+      flex: 1,
     }
   ];
 
   return (
-    <div style={{ display: 'flex', flex: 1, width: '100%' }}>
-      <DataGrid
+    <div style={{ width: '100%' }}>
+      <AppDataGrid
         rows={rows}
         columns={columns}
         getRowId={(row) => row.id ?? `${row.ticker} - ${row.date} - ${row.quantity} - ${row.price}` }
-        initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
-        pageSizeOptions={[5, 10, 25]}
-        style={{ flex: 1 }}
       />
     </div>
   );

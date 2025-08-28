@@ -118,8 +118,27 @@ app.MapGet("/assets/id/{ticker}", async (string ticker, IAssetRepository repo) =
         : Results.Ok(asset.Id);
 });
 
-app.MapGet("/assets", async (IAssetRepository repo)
-    => Results.Ok(await repo.GetAllAsync()));
+app.MapGet("/assets", async (IAssetRepository assetrepo, ILotRepository lotrepo)
+    =>
+{
+    var assets = await assetrepo.GetAllAsync();
+    var lots = await lotrepo.GetAllAsync();
+
+    var result = assets
+        .GroupJoin(lots, a => a.Id, l => l.AssetId, (a, lotGroup) => new { a, lotGroup })
+        .Select(x =>
+        {
+            var ordered = x.lotGroup.OrderBy(l => l.PurchaseDate).ToList();
+            var total   = ordered.Sum(l => l.QtyRemain);
+            var last    = ordered.LastOrDefault();
+            return new AssetDto(x.a.Ticker, total, last?.UnitCost ?? 0m);
+        })
+        .OrderBy(r => r.Ticker)
+        .ToList();
+
+    
+    return Results.Ok(result);
+});
 
 // BUY
 app.MapPost("/trades/buy", async (BuyRequestDto dto, IAssetRepository repo, TradeService svc) =>
@@ -180,4 +199,6 @@ app.MapGet("/trades/all", async (ITradeRepository tradeRepo, IAssetRepository as
     return Results.Ok(result);
 });
 
+app.UseDefaultFiles(); // index.html, и т.д.
+app.UseStaticFiles();  // wwwroot
 app.Run("http://localhost:5255");

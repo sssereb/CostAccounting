@@ -66,10 +66,6 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
-/* src/tailwind.css или index.css */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 /* AG Grid dark override */
 :root {
@@ -77,4 +73,11 @@ button:focus-visible {
   --ag-header-background-color: #1d1d1d;
   --ag-foreground-color: #e0e0e0;
   --ag-row-border-color: #1d1d1d;
+}
+
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }

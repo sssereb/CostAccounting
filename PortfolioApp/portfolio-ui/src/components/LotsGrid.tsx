@@ -1,18 +1,7 @@
-import { DataGrid } from '@mui/x-data-grid';
-import type { GridColDef } from '@mui/x-data-grid';
-import { format } from 'date-fns';
-import { useLots } from '../hooks/useTrades';
 
-// --- safe date helpers ---
-function toDateSafe(d: string | number | Date | null) {
-  if (d == null) return null;
-  const dt = d instanceof Date ? d : new Date(d);
-  return isNaN(dt.getTime()) ? null : dt;
-}
-function formatYMD(d: string | number | Date | null) {
-  const dt = toDateSafe(d);
-  return dt ? format(dt, 'yyyy-MM-dd') : '';
-}
+import AppDataGrid from "./AppDataGrid";
+import type { GridColDef } from '@mui/x-data-grid';
+import { useLots } from '../hooks/useTrades';
 
 type Lot = {
   id?: string | number;
@@ -42,43 +31,40 @@ export function LotsGrid() {
 
   const columns: GridColDef<Lot>[] = [
     { field: 'ticker', 
-      headerName: 'Ticker', 
-      flex: 1 
+      headerName: 'Ticker',
+      flex: 1,
     },
 
     { field: 'purchaseDate', 
-      headerName: 'Purchase Date', 
-      flex: 1 
+      headerName: 'Purchase Date',
+      flex: 1,
     },
     {
       field: 'qtyInitial',
       headerName: 'Qty (initial)',
       type: 'number',
-      flex: 1 
+      flex: 1,
     },
     {
       field: 'qtyRemain',
       headerName: 'Qty (remain)',
       type: 'number',
-      flex: 1 
+      flex: 1,
     },
     {
       field: 'unitCost',
       headerName: 'Unit cost',
       type: 'number',
-      flex: 1 
+      flex: 1,
     },
   ];
 
   return (
-    <div style={{ display: 'flex', flex: 1, width: '100%' }}>
-      <DataGrid
+    <div style={{ width: '100%' }}>
+      <AppDataGrid
         rows={rows}
         columns={columns}
-        getRowId={(row) => row.id ?? `${row.ticker}-${formatYMD(row.purchaseDate)}-${row.qtyRemain}-${row.unitCost}` }
-        initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
-        pageSizeOptions={[5, 10, 25]}
-        style={{ flex: 1 }}
+        getRowId={(row) => row.id ?? `${row.ticker}-${row.purchaseDate}-${row.qtyRemain}-${row.unitCost}` }
       />
     </div>
   );
