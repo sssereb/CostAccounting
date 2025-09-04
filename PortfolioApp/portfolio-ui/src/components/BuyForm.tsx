@@ -14,7 +14,7 @@ import {
   useAssets,
   type Asset,
 } from "../hooks/useTrades";          // подправь путь если у тебя иначе
-import type { BuyRequestDto } from "../api/types"; // подправь путь если нужно
+import type { BuyRequestDto } from "../hooks/useTrades"; // подправь путь если нужно
 import { useDebounce } from "../utils/useDebounce"; // подправь путь если нужно
 
 // Можно вынести в src/utils/date.ts
@@ -42,7 +42,7 @@ export default function BuyForm() {
   const handleBuy = () => {
     if (!canBuy) return;
 
-    const base = { qty, price, date: isoFromDateInput(date) };
+    const base = { ticker, qty, price, date: isoFromDateInput(date) };
 
     // если нашли существующий assetId — шлём его; иначе — шлём тикер для создания
     const dto: BuyRequestDto = assetIdQ.data

@@ -91,7 +91,7 @@ export default function PortfolioTabs() {
     },
   ];
 
-  const firstId = "trade";
+  const firstId = "trading";
   const [active, setActive] = useState<string>(() => readTabFromLocation("tab", firstId));
   useEffect(() => { if (active) writeTabToLocation("tab", active); }, [active]);
 
