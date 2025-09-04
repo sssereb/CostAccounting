@@ -30,7 +30,7 @@ var dbPath  = Environment.GetEnvironmentVariable("DB_PATH") ?? GetDefaultDbPath(
 
 if (useSqlite)
 {
-    builder.Services.AddPortfolioEfCoreSqlite(dbPath);
+    builder.Services.AddPortfolioEfCoreSqlite();
     builder.Services.AddPortfolioRepositoriesEfCore();
 }
 else

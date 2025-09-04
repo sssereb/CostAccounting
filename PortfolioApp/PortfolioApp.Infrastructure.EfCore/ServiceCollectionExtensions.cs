@@ -16,9 +16,9 @@ public static class ServiceCollectionExtensions
         return services;
     }
     
-    public static IServiceCollection AddPortfolioEfCoreSqlite(this IServiceCollection services, string dbPath)
+    public static IServiceCollection AddPortfolioEfCoreSqlite(this IServiceCollection services)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(dbPath)!);
+        var dbPath = DbPathResolver.getAbsoluteDbPath(); // только конфиг
 
         var cs = new SqliteConnectionStringBuilder { DataSource = dbPath, Cache = SqliteCacheMode.Shared }.ToString();
 

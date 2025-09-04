@@ -41,5 +41,13 @@
           DestinationFolder="$(PublishDir)wwwroot\%(RecursiveDir)"
           SkipUnchangedFiles="true" />
   </Target>
+  
+  <ItemGroup>
+    <Content Include="..\..\Database\**\*">
+      <Link>Database\%(RecursiveDir)%(FileName)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
 
 </Project>

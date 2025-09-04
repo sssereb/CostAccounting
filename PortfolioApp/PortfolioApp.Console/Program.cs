@@ -18,15 +18,13 @@ public class Program
         
         var storageEnv = Environment.GetEnvironmentVariable("PORTFOLIO_STORAGE") ?? "Sqlite"; // "Sqlite" | "InMemory"
         var useSqlite  = string.Equals(storageEnv, "Sqlite", StringComparison.OrdinalIgnoreCase);
-        var dbPath  = Environment.GetEnvironmentVariable("DB_PATH") ?? GetDefaultDbPath();
 
         Console.WriteLine(useSqlite);
         
         if (useSqlite)
         {
-            services.AddPortfolioEfCoreSqlite(dbPath);
+            services.AddPortfolioEfCoreSqlite();
             services.AddPortfolioRepositoriesEfCore();
-            Console.WriteLine(dbPath);
         }
         else
         {

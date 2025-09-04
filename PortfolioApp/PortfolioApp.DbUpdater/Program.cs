@@ -21,7 +21,7 @@ using var host = Host.CreateDefaultBuilder(args)
     .ConfigureServices(services =>
     {
         // регистрируем DbContext и всё, что нужно для миграций
-        services.AddPortfolioEfCoreSqlite(dbPath);
+        services.AddPortfolioEfCoreSqlite();
     })
     .Build();
 
