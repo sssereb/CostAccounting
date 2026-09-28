@@ -4,7 +4,6 @@ using PortfolioApp.Application.Persistence;
 using PortfolioApp.Application.Repositories.InMemory;
 using PortfolioApp.Application.Repositories.Interfaces;
 using PortfolioApp.Application.Strategies;
-using PortfolioApp.Infrastructure.Fees;
 
 namespace PortfolioApp.Application;
 

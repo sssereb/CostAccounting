@@ -1,5 +1,7 @@
 # CostAccounting
 
+[![CI](https://github.com/sssereb/CostAccounting/actions/workflows/ci.yml/badge.svg)](https://github.com/sssereb/CostAccounting/actions/workflows/ci.yml)
+
 A small portfolio cost-basis accounting app. Buys create lots. Sells consume
 lots using FIFO, LIFO or Average cost. Configurable fee rules (fixed per trade,
 fixed per share or percent of trade value) are applied to buys and sells.

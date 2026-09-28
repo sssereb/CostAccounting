@@ -18,10 +18,9 @@ public static class ServiceCollectionExtensions
         return services;
     }
     
-    public static IServiceCollection AddPortfolioEfCoreSqlite(this IServiceCollection services)
+    /// <param name="dbPath">Full path of the SQLite file, usually from <see cref="DbPathResolver.Resolve"/>.</param>
+    public static IServiceCollection AddPortfolioEfCoreSqlite(this IServiceCollection services, string dbPath)
     {
-        var dbPath = DbPathResolver.getAbsoluteDbPath(); // resolved from config only
-
         var cs = new SqliteConnectionStringBuilder { DataSource = dbPath, Cache = SqliteCacheMode.Shared }.ToString();
 
         services.AddDbContext<PortfolioDbContext>(opt => opt.UseSqlite(cs));

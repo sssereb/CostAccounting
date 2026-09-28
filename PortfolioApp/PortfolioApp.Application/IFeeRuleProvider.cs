@@ -1,4 +1,4 @@
-using PortfolioApp.Application;
+namespace PortfolioApp.Application.Fees;
 
 public interface IFeeRuleProvider
 {

@@ -4,40 +4,35 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
 using PortfolioApp.Application;
 using PortfolioApp.Application.DTOs;
+using PortfolioApp.Application.Fees;
 using PortfolioApp.Application.Repositories.Interfaces;
 using PortfolioApp.Domain;
 using PortfolioApp.Infrastructure.EfCore;
+using PortfolioApp.Web.Errors;
 using PortfolioApp.Web.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
-string GetDefaultDbPath()
-{
-    var root = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-    var appDir = Path.Combine(root, "PortfolioApp");
-    Directory.CreateDirectory(appDir);
-    return Path.Combine(appDir, "portfolio.db");
-}
-
-
 // ── DI
-builder.Services
-    .AddPortfolioCore();                 
-   
-        
-var storageEnv = Environment.GetEnvironmentVariable("PORTFOLIO_STORAGE") ?? "Sqlite"; // "Sqlite" | "InMemory"
-var useSqlite  = string.Equals(storageEnv, "Sqlite", StringComparison.OrdinalIgnoreCase);
-var dbPath  = Environment.GetEnvironmentVariable("DB_PATH") ?? GetDefaultDbPath();
+builder.Services.AddPortfolioCore();
+
+// PORTFOLIO_STORAGE (Sqlite | InMemory) and DB_PATH are read from configuration, environment variables included.
+var storage   = builder.Configuration["PORTFOLIO_STORAGE"] ?? "Sqlite";
+var useSqlite = string.Equals(storage, "Sqlite", StringComparison.OrdinalIgnoreCase);
 
 if (useSqlite)
 {
-    builder.Services.AddPortfolioEfCoreSqlite();
+    builder.Services.AddPortfolioEfCoreSqlite(DbPathResolver.Resolve(builder.Configuration["DB_PATH"]));
     builder.Services.AddPortfolioRepositoriesEfCore();
 }
 else
 {
     builder.Services.AddPortfolioRepositoriesInMemory();
 }
+
+// ── Errors: every failure is answered with ProblemDetails
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<ProblemExceptionHandler>();
 
 // ── Swagger & CORS
 builder.Services.AddEndpointsApiExplorer();
@@ -58,6 +53,8 @@ builder.Services.Configure<Microsoft.AspNetCore.Mvc.JsonOptions>(opt =>
     opt.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 var app = builder.Build();
+app.UseExceptionHandler();
+app.UseStatusCodePages();   // empty error responses (e.g. binding failures) get a ProblemDetails body
 app.UseCors("Frontend");
 app.UseSwagger();
 app.UseSwaggerUI();
@@ -84,23 +81,17 @@ using (var scope = app.Services.CreateScope())
 app.MapGet("/fees/get", (IFeeRuleProvider p) =>
     TypedResults.Ok(p.GetRules().Select(r => r.ToDto()).ToList()));
 
-app.MapPost("/fees/save", Results<NoContent, BadRequest<string>> (IFeeRuleProvider prov, [FromBody] IEnumerable<FeeRuleDto> body) =>
+app.MapPost("/fees/save", Results<NoContent, ProblemHttpResult> (IFeeRuleProvider prov, [FromBody] IEnumerable<FeeRuleDto> body) =>
 {
     if (body.Any(r => !Enum.IsDefined(typeof(FeeType), r.Type)))
-        return TypedResults.BadRequest("Unknown fee type.");
+        return Invalid("Unknown fee type.");
     if (body.Any(r => r.Amount < 0))
-        return TypedResults.BadRequest("Amount must be non-negative.");
+        return Invalid("Amount must be non-negative.");
 
-    try
-    {
-        prov.SetRules(body.Select(d => d.ToDomain()));
-    }
-    catch (InvalidOperationException ex)
-    {
-        return TypedResults.BadRequest(ex.Message);
-    }
+    prov.SetRules(body.Select(d => d.ToDomain()));   // duplicates throw ArgumentException -> 400
     return TypedResults.NoContent();
-});
+})
+.ProducesProblem(StatusCodes.Status400BadRequest);
 
 app.MapDelete("/fees/delete", (IFeeRuleProvider p) =>
 {
@@ -109,13 +100,14 @@ app.MapDelete("/fees/delete", (IFeeRuleProvider p) =>
 });
 
 // Assets
-app.MapGet("/assets/id/{ticker}", async Task<Results<Ok<Guid>, NotFound<string>>> (string ticker, IAssetRepository repo) =>
+app.MapGet("/assets/id/{ticker}", async Task<Results<Ok<Guid>, ProblemHttpResult>> (string ticker, IAssetRepository repo) =>
 {
     var asset = await repo.GetByTickerAsync(ticker);
     return asset is null
-        ? TypedResults.NotFound($"Asset with ticker '{ticker}' not found")
+        ? NotFound($"Asset with ticker '{ticker}' not found")
         : TypedResults.Ok(asset.Id);
-});
+})
+.ProducesProblem(StatusCodes.Status404NotFound);
 
 app.MapGet("/assets", async (IAssetRepository assetrepo, ILotRepository lotrepo)
     =>
@@ -139,18 +131,19 @@ app.MapGet("/assets", async (IAssetRepository assetrepo, ILotRepository lotrepo)
 });
 
 // BUY
-app.MapPost("/trades/buy", async Task<Results<Ok, BadRequest<string>>> (BuyRequestDto dto, IAssetRepository repo, TradeService svc) =>
+app.MapPost("/trades/buy", async Task<Results<Ok, ProblemHttpResult>> (BuyRequestDto dto, IAssetRepository repo, TradeService svc) =>
 {
     if (dto.AssetId is null && string.IsNullOrWhiteSpace(dto.Ticker))
-        return TypedResults.BadRequest("assetId or ticker required");
+        return Invalid("assetId or ticker required");
 
     var assetId = dto.AssetId ?? (await IAssetRepository.GetOrCreateAsync(repo, dto.Ticker!)).Id;
     await svc.BuyAsync(assetId, dto.Qty, dto.Price, dto.Date);
     return TypedResults.Ok();
-});
+})
+.ProducesProblem(StatusCodes.Status400BadRequest);
 
 // SELL
-app.MapPost("/trades/sell", async Task<Results<Ok<SaleResult>, NotFound<string>, BadRequest<string>, ProblemHttpResult>> (
+app.MapPost("/trades/sell", async Task<Results<Ok<SaleResult>, ProblemHttpResult>> (
     SellRequestDto dto, IAssetRepository repo, TradeService svc) =>
 {
     Guid assetId;
@@ -159,28 +152,17 @@ app.MapPost("/trades/sell", async Task<Results<Ok<SaleResult>, NotFound<string>,
     else if (!string.IsNullOrWhiteSpace(dto.Ticker))
     {
         var a = await repo.GetByTickerAsync(dto.Ticker);
-        if (a is null) return TypedResults.NotFound($"Asset '{dto.Ticker}' not found");
+        if (a is null) return NotFound($"Asset '{dto.Ticker}' not found");
         assetId = a.Id;
     }
-    else return TypedResults.BadRequest("assetId or ticker required");
+    else return Invalid("assetId or ticker required");
 
-    try
-    {
-        var res = await svc.SellAsync(assetId, dto.Qty, dto.Price, dto.Method, dto.Date);
-        return TypedResults.Ok(res);
-    }
-    catch (InvalidOperationException ex)
-    {
-        return TypedResults.Problem(
-            title: "Sell rejected",
-            detail: ex.Message,
-            statusCode: 409);
-    }
-    catch (Exception ex)
-    {
-        return TypedResults.Problem(title: "Sell failed", detail: ex.Message, statusCode: 500);
-    }
-});
+    // Oversell and concurrent changes surface as InvalidOperationException -> 409
+    return TypedResults.Ok(await svc.SellAsync(assetId, dto.Qty, dto.Price, dto.Method, dto.Date));
+})
+.ProducesProblem(StatusCodes.Status400BadRequest)
+.ProducesProblem(StatusCodes.Status404NotFound)
+.ProducesProblem(StatusCodes.Status409Conflict);
 
 // Lots
 app.MapGet("/lots", async (ILotRepository lotRepo, IAssetRepository assetRepo) =>
@@ -217,6 +199,12 @@ app.MapGet("/trades/all", async (ITradeRepository tradeRepo, IAssetRepository as
 app.UseDefaultFiles(); // index.html etc.
 app.UseStaticFiles();  // wwwroot
 app.Run("http://localhost:5255");
+
+static ProblemHttpResult Invalid(string detail) =>
+    TypedResults.Problem(detail, statusCode: StatusCodes.Status400BadRequest, title: "Invalid request");
+
+static ProblemHttpResult NotFound(string detail) =>
+    TypedResults.Problem(detail, statusCode: StatusCodes.Status404NotFound, title: "Not found");
 
 // Lets WebApplicationFactory<Program> reference the entry point from the test project.
 public partial class Program;

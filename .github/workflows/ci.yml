@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node is needed before restore: portfolio-ui.csproj runs npm ci during the .NET build.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: PortfolioApp/portfolio-ui/package-lock.json
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore PortfolioApp/PortfolioApp.sln
+
+      - name: Build
+        run: dotnet build PortfolioApp/PortfolioApp.sln --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test PortfolioApp/PortfolioApp.sln --no-build --configuration Release
+
+      - name: Frontend build and lint
+        working-directory: PortfolioApp/portfolio-ui
+        run: |
+          npm ci
+          npm run build
+          npm run lint
+
+      - name: Generated API types match openapi.json
+        working-directory: PortfolioApp/portfolio-ui
+        run: |
+          npm run gen:api
+          git diff --exit-code -- src/api/schema.d.ts

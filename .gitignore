@@ -24,5 +24,5 @@ npm-debug.log*
 *.db-wal
 PortfolioApp/Data/
 
-# Built frontend bundles served by the Web project
-PortfolioApp/PortfolioApp.Web/wwwroot/assets/
+# Frontend build output, copied into the Web project on every build
+PortfolioApp/PortfolioApp.Web/wwwroot/

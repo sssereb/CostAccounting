@@ -3,7 +3,8 @@ using PortfolioApp.Application;
 using PortfolioApp.Application.Repositories.Interfaces;
 using PortfolioApp.Application.Strategies;
 using PortfolioApp.Domain;
-using PortfolioApp.Infrastructure.EfCore; // AddPortfolioEfCoreSqlite
+using PortfolioApp.Application.Fees;
+using PortfolioApp.Infrastructure.EfCore;
 
 public class Program
 {
@@ -22,7 +23,7 @@ public class Program
         
         if (useSqlite)
         {
-            services.AddPortfolioEfCoreSqlite();
+            services.AddPortfolioEfCoreSqlite(DbPathResolver.Resolve(Environment.GetEnvironmentVariable("DB_PATH")));
             services.AddPortfolioRepositoriesEfCore();
         }
         else

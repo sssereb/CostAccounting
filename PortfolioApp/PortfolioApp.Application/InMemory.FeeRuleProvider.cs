@@ -1,7 +1,6 @@
-// PortfolioApp.Infrastructure/Fees/MemoryFeeRuleProvider.cs
 using PortfolioApp.Application;
 
-namespace PortfolioApp.Infrastructure.Fees;
+namespace PortfolioApp.Application.Fees;
 
 /// <summary>
 /// Simple in-memory fee rule provider.
@@ -25,7 +24,7 @@ public sealed class MemoryFeeRuleProvider : IFeeRuleProvider
     }
 
     /// <summary>Replaces the whole rule list.</summary>
-    /// <exception cref="InvalidOperationException">When duplicate rules (Type+Amount+Direction) are passed.</exception>
+    /// <exception cref="ArgumentException">When duplicate rules (Type+Amount+Direction) are passed.</exception>
     public void SetRules(IEnumerable<FeeRegistration> rules)
     {
         if (rules is null) throw new ArgumentNullException(nameof(rules));
@@ -37,7 +36,7 @@ public sealed class MemoryFeeRuleProvider : IFeeRuleProvider
         if (dup != null)
         {
             var (type, amt, dir) = dup.Key;
-            throw new InvalidOperationException(
+            throw new ArgumentException(
                 $"Duplicate fee rule detected: {type} {amt} {dir}");
         }
         // ----------------------------------------------------------------------

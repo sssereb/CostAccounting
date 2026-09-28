@@ -1,8 +1,6 @@
-// Application/Fees/FeeCalculatorFactory.cs
-
-using PortfolioApp.Application;
-using PortfolioApp.Application.Fees;
 using PortfolioApp.Domain;
+
+namespace PortfolioApp.Application.Fees;
 
 public static class FeeCalculatorFactory
 {

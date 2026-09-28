@@ -2,86 +2,44 @@ using Microsoft.Extensions.Configuration;
 
 namespace PortfolioApp.Infrastructure.EfCore;
 
+/// <summary>
+/// Resolves the SQLite file. An explicit path (DB_PATH) wins, otherwise database:relativePath from
+/// config/appsettings.shared.json is used. Relative paths are resolved against the folder that
+/// contains config/, found by walking up from the app directory, so the Web app, the DbUpdater and
+/// the Console client share one database.
+/// </summary>
 public static class DbPathResolver
 {
-    private const string DefaultRel = "Database/portfolio.db";
-    private const string ConfigRelPath = "config/appsettings.shared.json";
+    private const string SharedConfig = "config/appsettings.shared.json";
+    private const string DefaultRelativePath = "Database/portfolio.db";
 
-    // Walks up to the nearest directory that contains config/appsettings.shared.json
-    private static string? findConfigBase()
+    public static string Resolve(string? dbPath = null)
     {
-        var cur = new DirectoryInfo(AppContext.BaseDirectory);
+        var root = FindConfigRoot();
+        var path = string.IsNullOrWhiteSpace(dbPath) ? ReadConfiguredPath(root) : dbPath;
 
-        while (cur != null)
-        {
-            var candidate = Path.Combine(cur.FullName, ConfigRelPath);
-            if (File.Exists(candidate))
-                return cur.FullName;
-
-            // Extra repo root markers: Database/, .git, *.sln
-            if (Directory.Exists(Path.Combine(cur.FullName, "Database")) ||
-                Directory.Exists(Path.Combine(cur.FullName, ".git")) ||
-                cur.GetFiles("*.sln").Any())
-            {
-                // A marker is present but the file is not: the config may sit next to the project
-                var localProjCfg = Path.Combine(cur.FullName, ConfigRelPath);
-                if (File.Exists(localProjCfg))
-                    return cur.FullName;
-            }
-
-            cur = cur.Parent;
-        }
-
-        return null;
+        var fullPath = Path.GetFullPath(path, root ?? AppContext.BaseDirectory);
+        Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
+        return fullPath;
     }
 
-    private static IConfiguration buildConfig(out string? configBasePath)
+    private static string ReadConfiguredPath(string? root)
     {
-        configBasePath = findConfigBase();
+        if (root is null) return DefaultRelativePath;
 
-        var builder = new ConfigurationBuilder();
+        var configured = new ConfigurationBuilder()
+            .AddJsonFile(Path.Combine(root, SharedConfig), optional: true)
+            .Build()["database:relativePath"];
 
-        if (configBasePath != null)
-        {
-            // Config base found: read it; optional so a missing file does not throw
-            builder.SetBasePath(configBasePath)
-                   .AddJsonFile(path: ConfigRelPath, optional: true, reloadOnChange: false);
-        }
-
-        // Environment variables are intentionally not used
-        return builder.Build();
+        return string.IsNullOrWhiteSpace(configured) ? DefaultRelativePath : configured;
     }
 
-    /// <summary>
-    /// Config only. If the config is missing or the key is empty, DefaultRel is used.
-    /// A relative path resolves against the config directory, otherwise against the nearest "root" (where Database/, .git or *.sln is visible), otherwise against the app base directory.
-    /// </summary>
-    public static string getAbsoluteDbPath(string key = "database:relativePath")
+    private static string? FindConfigRoot()
     {
-        var cfg = buildConfig(out var cfgBase);
-
-        var configured = cfg[key];
-        var path = string.IsNullOrWhiteSpace(configured) ? DefaultRel : configured;
-
-        // Base directory for relative paths
-        var baseDir = cfgBase ?? findNearestRoot() ?? AppContext.BaseDirectory;
-
-        var abs = Path.IsPathRooted(path) ? path : Path.Combine(baseDir, path);
-        Directory.CreateDirectory(Path.GetDirectoryName(abs)!);
-        return abs;
-    }
-
-    // Fallback root when no config is found: walk up until Database/, .git or *.sln is visible
-    private static string? findNearestRoot()
-    {
-        var cur = new DirectoryInfo(AppContext.BaseDirectory);
-        while (cur != null)
+        for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir is not null; dir = dir.Parent)
         {
-            if (Directory.Exists(Path.Combine(cur.FullName, "Database")) ||
-                Directory.Exists(Path.Combine(cur.FullName, ".git")) ||
-                cur.GetFiles("*.sln").Any())
-                return cur.FullName;
-            cur = cur.Parent;
+            if (File.Exists(Path.Combine(dir.FullName, SharedConfig)))
+                return dir.FullName;
         }
         return null;
     }

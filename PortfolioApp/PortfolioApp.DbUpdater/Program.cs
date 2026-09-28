@@ -3,25 +3,11 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using PortfolioApp.Infrastructure.EfCore;
 
-static string GetDefaultDbPath()
-{
-    // macOS: ~/Library/Application Support/PortfolioApp/portfolio.db
-    // Windows: %LOCALAPPDATA%\PortfolioApp\portfolio.db
-    var root = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-    var appDir = Path.Combine(root, "PortfolioApp");
-    Directory.CreateDirectory(appDir);
-    return Path.Combine(appDir, "portfolio.db");
-}
-
-var dbPath  = Environment.GetEnvironmentVariable("DB_PATH") ?? GetDefaultDbPath();
+var dbPath = DbPathResolver.Resolve(Environment.GetEnvironmentVariable("DB_PATH"));
 
 using var host = Host.CreateDefaultBuilder(args)
     .ConfigureLogging(lb => lb.ClearProviders().AddConsole())
-    .ConfigureServices(services =>
-    {
-        // DbContext and everything migrations need
-        services.AddPortfolioEfCoreSqlite();
-    })
+    .ConfigureServices(services => services.AddPortfolioEfCoreSqlite(dbPath))
     .Build();
 
 using var scope = host.Services.CreateScope();
