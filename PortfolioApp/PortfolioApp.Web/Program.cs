@@ -217,3 +217,6 @@ app.MapGet("/trades/all", async (ITradeRepository tradeRepo, IAssetRepository as
 app.UseDefaultFiles(); // index.html etc.
 app.UseStaticFiles();  // wwwroot
 app.Run("http://localhost:5255");
+
+// Lets WebApplicationFactory<Program> reference the entry point from the test project.
+public partial class Program;
