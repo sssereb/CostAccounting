@@ -1,17 +1,6 @@
-import { useFeeRules } from '../hooks/useFeeRules';
+import { useFeeRules, type FeeRuleDto } from '../hooks/useFeeRules';
 import AppDataGrid from "./AppDataGrid";
 import type { GridColDef } from '@mui/x-data-grid';
-
-/* ---- DTO ---- */
-type FeeType = "FixedPerTrade" | "FixedPerShare" | "PercentOfValue";
-type FeeDirection = "Buy" | "Sell" | "Both";
-interface FeeRuleDto {
-  type: FeeType;
-  amount: number;
-  direction: FeeDirection;
-}
-
-
 
 export default function FeeRulesGrid() {
   const { data = [], isLoading, error, refetch } = useFeeRules();
@@ -28,7 +17,7 @@ export default function FeeRulesGrid() {
     );
   if (!data || data.length === 0) return <p>(no fee rules yet)</p>;
 
-  const rows = data as FeeRuleDto[];
+  const rows: FeeRuleDto[] = data;
 
   const columns: GridColDef<FeeRuleDto>[] = [
     { field: 'type', 

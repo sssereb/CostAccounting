@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
 using PortfolioApp.Application;
 using PortfolioApp.Application.DTOs;
@@ -79,14 +80,21 @@ using (var scope = app.Services.CreateScope())
 app.MapGet("/fees/get", (IFeeRuleProvider p)
     => Results.Ok(p.GetRules().Select(r => r.ToDto())));
 
-app.MapPost("/fees/save", (IFeeRuleProvider prov, IEnumerable<FeeRuleDto> body) =>
+app.MapPost("/fees/save", (IFeeRuleProvider prov, [FromBody] IEnumerable<FeeRuleDto> body) =>
 {
     if (body.Any(r => !Enum.IsDefined(typeof(FeeType), r.Type)))
         return Results.BadRequest("Unknown fee type.");
     if (body.Any(r => r.Amount < 0))
         return Results.BadRequest("Amount must be non-negative.");
 
-    prov.SetRules(body.Select(d => d.ToDomain()));
+    try
+    {
+        prov.SetRules(body.Select(d => d.ToDomain()));
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.BadRequest(ex.Message);
+    }
     return Results.NoContent();
 });
 

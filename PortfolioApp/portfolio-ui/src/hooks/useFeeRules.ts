@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { http } from "../lib/http";
 
 /* ---------- DTO types ---------- */
-export type FeeType = "FixedPerTrade" | "FixedPerShare" | "PercentOfValue";
+export type FeeType = "FixedPerTrade" | "FixedPerShare" | "Percent";
 export type FeeDirection = "Buy" | "Sell" | "Both";
 
 export interface FeeRuleDto {
@@ -22,13 +22,13 @@ export function useFeeRules() {
   });
 }
 
-/* ---------- PUT  /fees/put ---------- */
+/* ---------- POST /fees/save ---------- */
 export function useSaveFeeRules() {
   const qc = useQueryClient();
 
   return useMutation({
     mutationFn: (payload: FeeRuleDto[]) =>
-      http.put("/fees/put", payload),
+      http.post("/fees/save", payload),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: ["fees"] })
   });
