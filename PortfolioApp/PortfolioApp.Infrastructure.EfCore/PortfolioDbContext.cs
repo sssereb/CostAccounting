@@ -1,5 +1,4 @@
-﻿// Infrastructure/EfCore/PortfolioDbContext.cs
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using PortfolioApp.Domain;
 
 namespace PortfolioApp.Infrastructure.EfCore;

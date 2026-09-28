@@ -1,5 +1,3 @@
-using PortfolioApp.Application;
-
 namespace PortfolioApp.Application.Fees;
 
 /// <summary>

@@ -1,4 +1,3 @@
-// PortfolioApp.Tests/Application/TradeServiceTests.cs
 using System.Runtime.Serialization;
 using Moq;
 using PortfolioApp.Application;
@@ -12,9 +11,6 @@ namespace PortfolioApp.Tests;
 
 public class TradeServiceTests
 {
-    /* ----------------------------------------------------------------
-     * BUY: 
-     * --------------------------------------------------------------*/
     [Fact(DisplayName = "Buy: Lot & Trade saved with proper fields")]
     public async Task Buy_SavesLotAndTrade()
     {
@@ -66,9 +62,6 @@ public class TradeServiceTests
         Assert.Equal(date, storedLot.PurchaseDate);
     }
 
-    /* ----------------------------------------------------------------
-     * BUY: Asset not found
-     * --------------------------------------------------------------*/
     [Fact(DisplayName = "Buy: unknown asset id throws KeyNotFoundException")]
     public async Task Buy_Throws_When_AssetMissing()
     {
@@ -88,9 +81,6 @@ public class TradeServiceTests
             service.BuyAsync(Guid.NewGuid(), 1, 1m, DateTime.Today));
     }
 
-    /* ----------------------------------------------------------------
-     * SELL: "Sell: Lot & Trade saved with proper fields"
-     * --------------------------------------------------------------*/
     [Fact(DisplayName = "Sell: passes sell fees to the strategy and stores both profits")]
     public async Task Sell_PersistsEverything()
     {

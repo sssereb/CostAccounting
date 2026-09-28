@@ -43,7 +43,7 @@ public sealed class FeeService : IFeeService
             .Select(FeeCalculatorFactory.Create)  // FeeRegistration → IFeeCalculator
             .ToArray();
 
-        // 3) sum up the fees
+        // 3) one fee per calculator
         var composite = new FeeComposite(calculators);
         return composite.CalcAll(qty, price, direction);
     }

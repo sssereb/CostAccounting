@@ -49,15 +49,15 @@ public class CostBasisStrategyTests
 
     // ----------------------- negative ----------------------
 
-    [Fact(DisplayName = "FIFO: oversell ⇒ Exception + QtyRemain unchanged")]
+    [Fact(DisplayName = "FIFO: oversell throws and leaves QtyRemain unchanged")]
     public void Fifo_Oversell()
         => OversellCase(new FifoStrategy());
 
-    [Fact(DisplayName = "LIFO: oversell ⇒ Exception + QtyRemain unchanged")]
+    [Fact(DisplayName = "LIFO: oversell throws and leaves QtyRemain unchanged")]
     public void Lifo_Oversell()
         => OversellCase(new LifoStrategy());
 
-    [Fact(DisplayName = "AVG: oversell ⇒ Exception + QtyRemain unchanged")]
+    [Fact(DisplayName = "AVG: oversell throws and leaves QtyRemain unchanged")]
     public void Avg_Oversell()
         => OversellCase(new AverageCostStrategy());
 

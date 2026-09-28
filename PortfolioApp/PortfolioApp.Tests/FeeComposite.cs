@@ -1,4 +1,3 @@
-// PortfolioApp.Console.Tests/Application/FeeCompositeTests.cs
 using PortfolioApp.Application;
 using PortfolioApp.Application.Fees;
 using PortfolioApp.Domain;

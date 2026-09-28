@@ -1,4 +1,3 @@
-// src/pages/PortfolioTabs.tsx
 import { useEffect, useState } from "react";
 import {
   AppBar, Toolbar, Box, Paper, Typography, Divider, Tabs, Tab,

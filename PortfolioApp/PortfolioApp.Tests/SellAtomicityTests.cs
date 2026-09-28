@@ -17,7 +17,7 @@ public class SellAtomicityTests
     private static readonly DateTime BuyDate = new(2025, 1, 1);
     private static readonly DateTime SellDate = new(2025, 2, 1);
 
-    [Fact(DisplayName = "Sell: trade insert fails ⇒ lot changes are rolled back")]
+    [Fact(DisplayName = "Sell: a failed trade insert rolls back the lot changes")]
     public async Task Sell_WhenTradeInsertFails_DoesNotPersistLotChanges()
     {
         using var database = new SqliteTestDatabase();
@@ -41,7 +41,7 @@ public class SellAtomicityTests
         Assert.Single(await verify.Trades.ToListAsync());
     }
 
-    [Fact(DisplayName = "Sell: two concurrent sales of the same lots ⇒ one wins, the other conflicts and writes nothing")]
+    [Fact(DisplayName = "Sell: of two concurrent sales of the same lots, the second conflicts and writes nothing")]
     public async Task ConcurrentSells_SecondFailsWithConflict()
     {
         using var database = new SqliteTestDatabase();

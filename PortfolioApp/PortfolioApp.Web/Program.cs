@@ -13,7 +13,7 @@ using PortfolioApp.Web.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ── DI
+// Application services and storage
 builder.Services.AddPortfolioCore();
 
 // PORTFOLIO_STORAGE (Sqlite | InMemory) and DB_PATH are read from configuration, environment variables included.
@@ -30,11 +30,11 @@ else
     builder.Services.AddPortfolioRepositoriesInMemory();
 }
 
-// ── Errors: every failure is answered with ProblemDetails
+// Every failure is answered with ProblemDetails
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<ProblemExceptionHandler>();
 
-// ── Swagger & CORS
+// Swagger and CORS
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -46,7 +46,7 @@ builder.Services.AddCors(opt =>
     opt.AddPolicy("Frontend", p =>
         p.WithOrigins("http://localhost:5173").AllowAnyHeader().AllowAnyMethod()));
 
-// ── JSON enums as strings (Swashbuckle reads the MVC options, the endpoints use the HTTP ones)
+// Enums as strings: the endpoints use the HTTP JSON options, Swashbuckle reads the MVC ones
 builder.Services.ConfigureHttpJsonOptions(opt =>
     opt.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.Configure<Microsoft.AspNetCore.Mvc.JsonOptions>(opt =>
@@ -59,7 +59,7 @@ app.UseCors("Frontend");
 app.UseSwagger();
 app.UseSwaggerUI();
 
-/* ── Demo fee rules (seeded once) ── */
+// Demo fee rules
 using (var scope = app.Services.CreateScope())
 {
     var sp   = scope.ServiceProvider;
@@ -75,7 +75,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// ───── Endpoints ─────
+// Endpoints
 // Under /api in every environment, so the UI calls the same paths via the Vite proxy and when served from wwwroot.
 var api = app.MapGroup("/api");
 

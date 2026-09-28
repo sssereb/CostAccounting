@@ -5,13 +5,12 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using PortfolioApp.Application.Repositories.Interfaces;
-using PortfolioApp.Domain;
 
 namespace PortfolioApp.Tests.Api;
 
 public class ErrorHandlingTests
 {
-    [Fact(DisplayName = "Unexpected exception ⇒ 500 ProblemDetails with a generic message, internals not leaked")]
+    [Fact(DisplayName = "Unexpected exception returns a generic 500 ProblemDetails without internals")]
     public async Task UnexpectedException_Returns500WithoutDetails()
     {
         var trades = new Mock<ITradeRepository>();
@@ -32,7 +31,7 @@ public class ErrorHandlingTests
         Assert.Equal("An unexpected error occurred.", (await ReadProblem(res)).Detail);
     }
 
-    [Fact(DisplayName = "Rule violation ⇒ 409 ProblemDetails carrying the domain message")]
+    [Fact(DisplayName = "Rule violation returns 409 ProblemDetails with the domain message")]
     public async Task Oversell_Returns409Problem()
     {
         using var factory = new ApiFactory();
@@ -48,7 +47,7 @@ public class ErrorHandlingTests
         Assert.Contains("Not enough shares", problem.Detail);
     }
 
-    [Fact(DisplayName = "Invalid argument ⇒ 400 ProblemDetails")]
+    [Fact(DisplayName = "Invalid argument returns 400 ProblemDetails")]
     public async Task InvalidQuantity_Returns400Problem()
     {
         using var factory = new ApiFactory();

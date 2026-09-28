@@ -11,7 +11,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Node is needed before restore: portfolio-ui.csproj runs npm ci during the .NET build.
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -23,10 +22,10 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Restore
-        run: dotnet restore PortfolioApp/PortfolioApp.sln
+        run: dotnet restore PortfolioApp/PortfolioApp.sln -p:SkipFrontendBuild=true
 
       - name: Build
-        run: dotnet build PortfolioApp/PortfolioApp.sln --no-restore --configuration Release
+        run: dotnet build PortfolioApp/PortfolioApp.sln --no-restore --configuration Release -p:SkipFrontendBuild=true
 
       - name: Test
         run: dotnet test PortfolioApp/PortfolioApp.sln --no-build --configuration Release

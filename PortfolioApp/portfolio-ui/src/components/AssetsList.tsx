@@ -1,4 +1,3 @@
-// src/components/AssetsList.tsx
 import { useAssets, type Asset } from "../hooks/useTrades";
 import type { GridColDef } from '@mui/x-data-grid';
 import AppDataGrid from "./AppDataGrid";

@@ -9,10 +9,10 @@ public class Lot
     public int QtyInitial { get; set; }
     public int QtyRemain { get; set; }
     
-    /// <summary>Purchase price per share, without fees.</summary>
+    /// <summary>Purchase price per share without fees; the pooled price after an Average sale.</summary>
     public decimal RawUnitCost { get; private set; }
 
-    /// <summary>Cost per share including buy fees; this is the cost basis.</summary>
+    /// <summary>Cost basis per share, buy fees included; the pooled cost after an Average sale.</summary>
     public decimal UnitCost { get; private set; }
 
     /// <summary>Optimistic concurrency token, incremented on every update.</summary>

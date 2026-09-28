@@ -1,4 +1,3 @@
-// Application/Strategies/CostBasisStrategyBase.cs
 namespace PortfolioApp.Application.Strategies;
 using PortfolioApp.Domain;
 
@@ -10,7 +9,7 @@ public abstract class CostBasisStrategyBase : ICostBasisStrategy
     protected abstract IOrderedEnumerable<Lot> OrderLots(IEnumerable<Lot> lots);
 
     /// Template method; average cost overrides it.
-    public virtual SaleResult Sell(IList<Lot> lots, int qty, decimal price, decimal sellFees)
+    public virtual SaleResult Sell(IList<Lot> lots, int qty, decimal sellPrice, decimal sellFees)
     {
         if (qty > lots.Sum(l => l.QtyRemain))
             throw new InvalidOperationException("Not enough shares");
@@ -35,7 +34,7 @@ public abstract class CostBasisStrategyBase : ICostBasisStrategy
         return new SaleResult(remQty,
             costSold / qty,
             remQty == 0 ? 0 : remCost / remQty,
-            GrossProfit: qty * price - rawCostSold,
-            NetProfit:   qty * price - costSold - sellFees);
+            GrossProfit: qty * sellPrice - rawCostSold,
+            NetProfit:   qty * sellPrice - costSold - sellFees);
     }
 }

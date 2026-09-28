@@ -15,7 +15,7 @@ gross profit (no fees) and net profit (after buy and sell fees).
 - Tests: xUnit + Moq; API tests with WebApplicationFactory on SQLite in-memory.
 - Frontend: React 19 + TypeScript + Vite, TanStack Query, MUI. API types are
   generated from the OpenAPI document (openapi-typescript + openapi-fetch).
-- CI: GitHub Actions builds and tests both parts on every pull request.
+- CI: GitHub Actions builds and tests both parts on pushes to main and on pull requests.
 
 ## Running
 
@@ -23,7 +23,7 @@ Requirements: .NET 8 SDK, Node.js 20.19+.
 
 ```
 dotnet run --project PortfolioApp/PortfolioApp.DbUpdater   # create or migrate the SQLite database
-dotnet run --project PortfolioApp/PortfolioApp.Web         # API on http://localhost:5255
+dotnet run --project PortfolioApp/PortfolioApp.Web         # API under http://localhost:5255/api, plus the built UI
 cd PortfolioApp/portfolio-ui && npm install && npm run dev # UI on http://localhost:5173, proxies /api
 dotnet test PortfolioApp/PortfolioApp.sln
 ```
@@ -35,9 +35,11 @@ Configuration (environment variables or any .NET configuration source):
   `database:relativePath` in `PortfolioApp/config/appsettings.shared.json`
   (default `Database/portfolio.db`). Relative paths resolve against `PortfolioApp/`.
 
-After changing an endpoint or DTO, refresh the contract with the backend running:
+After changing an endpoint or DTO, start the backend without building the UI (the UI will not compile
+against the old types) and refresh the contract:
 
 ```
+dotnet run --project PortfolioApp/PortfolioApp.Web -p:SkipFrontendBuild=true
 cd PortfolioApp/portfolio-ui && npm run openapi:pull && npm run gen:api
 ```
 
@@ -68,7 +70,8 @@ PortfolioApp/
   app this size strictly needs.
 - **Strategy + factory for cost basis.** Each method is a small class; FIFO and
   LIFO only define the lot order and share one template for consuming lots.
-  A new method (for example HIFO) is one class and one DI registration.
+  A new method (for example HIFO) needs a class, an enum value and a DI
+  registration, then regenerated API types.
 - **Fee-inclusive unit cost.** Buy fees are part of the cost basis, so a lot
   stores both the raw price and the unit cost including fees. Gross profit uses
   raw prices; net profit uses the cost basis and subtracts sell fees.
@@ -80,7 +83,8 @@ PortfolioApp/
   lots and the trade in one short transaction. Each lot has a version checked
   on update; if another sale got there first, the transaction rolls back and
   the API returns 409. No locks are held while computing, and it works on
-  SQLite, which has no row locks. Conflicts are rare, and a retry is cheap.
+  SQLite, which has no row locks. The losing sale is not retried automatically;
+  the user sees the 409 and can submit again.
 - **Contract from OpenAPI.** The UI types are generated, so an enum or field
   mismatch fails `tsc` instead of failing at runtime.
 

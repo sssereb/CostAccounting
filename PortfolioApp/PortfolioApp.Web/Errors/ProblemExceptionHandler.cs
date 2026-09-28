@@ -4,9 +4,10 @@ using Microsoft.AspNetCore.Mvc;
 namespace PortfolioApp.Web.Errors;
 
 /// <summary>
-/// Turns unhandled exceptions into ProblemDetails. Rule violations reported by the domain
-/// (InvalidOperationException, ArgumentException) keep their message; anything else is
-/// logged and answered with a generic 500 so internals do not leak to the client.
+/// Turns unhandled exceptions into ProblemDetails. KeyNotFoundException (404), ArgumentException (400)
+/// and InvalidOperationException (409) are treated as rule violations and keep their message. That
+/// includes such exceptions thrown by libraries, so their messages reach the client too (see README).
+/// Anything else is logged and answered with a generic 500.
 /// </summary>
 internal sealed class ProblemExceptionHandler : IExceptionHandler
 {
