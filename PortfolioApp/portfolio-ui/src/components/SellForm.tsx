@@ -127,7 +127,7 @@ export default function SellForm() {
                 >
                     <MenuItem value="FIFO">FIFO</MenuItem>
                     <MenuItem value="LIFO">LIFO</MenuItem>
-                    <MenuItem value="AVG">AVG</MenuItem>
+                    <MenuItem value="Average">AVG</MenuItem>
                 </Select>
             </FormControl>
             

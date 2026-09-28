@@ -20,7 +20,7 @@ export type SellRequestDto = {
   assetId?: string;
   qty:     number;
   price:   number;
-  method:  "FIFO" | "LIFO" | "AverageCost";
+  method:  "FIFO" | "LIFO" | "Average";
   date:    string;
 };
 
