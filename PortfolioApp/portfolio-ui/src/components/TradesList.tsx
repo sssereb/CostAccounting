@@ -19,7 +19,7 @@ export function TradesList() {
     );
   if (!data || data.length === 0) return <p>(no trades yet)</p>;
 
-  const rows = data as Trade[];
+  const rows: Trade[] = data;
 
   const columns: GridColDef<Trade>[] = [
     { field: 'ticker', 
@@ -62,7 +62,7 @@ export function TradesList() {
       <AppDataGrid
         rows={rows}
         columns={columns}
-        getRowId={(row) => row.id ?? `${row.ticker} - ${row.date} - ${row.quantity} - ${row.price}` }
+        getRowId={(row) => row.id}
       />
     </div>
   );

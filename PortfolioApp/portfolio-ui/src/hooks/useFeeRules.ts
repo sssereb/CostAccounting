@@ -1,46 +1,32 @@
-// src/hooks/useFeeRules.ts
 // React Query hooks for the fee rules endpoints.
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { http } from "../lib/http";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { api, unwrap, type Schemas } from "../api/client";
 
-/* ---------- DTO types ---------- */
-export type FeeType = "FixedPerTrade" | "FixedPerShare" | "Percent";
-export type FeeDirection = "Buy" | "Sell" | "Both";
+export type FeeRuleDto = Schemas["FeeRuleDto"];
+export type FeeType = Schemas["FeeType"];
+export type FeeDirection = Schemas["FeeDirection"];
 
-export interface FeeRuleDto {
-  type: FeeType;
-  amount: number;
-  direction: FeeDirection;
-}
-
-/* ---------- GET  /fees/get ---------- */
 export function useFeeRules() {
   return useQuery({
     queryKey: ["fees"],
-    queryFn : () =>
-      http.get<FeeRuleDto[]>("/fees/get").then(r => r.data)
+    queryFn: () => unwrap(api.GET("/fees/get")),
   });
 }
 
-/* ---------- POST /fees/save ---------- */
 export function useSaveFeeRules() {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: FeeRuleDto[]) =>
-      http.post("/fees/save", payload),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: ["fees"] })
+    mutationFn: (body: FeeRuleDto[]) => unwrap(api.POST("/fees/save", { body })),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["fees"] }),
   });
 }
 
-/* ---------- DELETE  /fees/delete ---------- */
 export function useResetFeeRules() {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: () => http.delete("/fees/delete"),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: ["fees"] })
+    mutationFn: () => unwrap(api.DELETE("/fees/delete")),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["fees"] }),
   });
 }

@@ -1,16 +1,7 @@
 
 import AppDataGrid from "./AppDataGrid";
 import type { GridColDef } from '@mui/x-data-grid';
-import { useLots } from '../hooks/useTrades';
-
-type Lot = {
-  id?: string | number;
-  ticker: string;
-  purchaseDate: string | Date;
-  qtyInitial: number;
-  qtyRemain: number;
-  unitCost: number;
-};
+import { useLots, type Lot } from '../hooks/useTrades';
 
 export function LotsGrid() {
   const { data = [], isLoading, error, refetch } = useLots();
@@ -27,7 +18,7 @@ export function LotsGrid() {
     );
   if (!data || data.length === 0) return <p>(no lots yet)</p>;
 
-  const rows = data as Lot[];
+  const rows: Lot[] = data;
 
   const columns: GridColDef<Lot>[] = [
     { field: 'ticker', 
@@ -64,7 +55,7 @@ export function LotsGrid() {
       <AppDataGrid
         rows={rows}
         columns={columns}
-        getRowId={(row) => row.id ?? `${row.ticker}-${row.purchaseDate}-${row.qtyRemain}-${row.unitCost}` }
+        getRowId={(row) => row.id}
       />
     </div>
   );

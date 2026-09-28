@@ -20,7 +20,7 @@ export function AssetsList() {
     );
   if (!data || data.length === 0) return <p>(no assets yet)</p>;
 
-  const rows = data as Asset[];
+  const rows: Asset[] = data;
 
   const columns: GridColDef<Asset>[] = [
     { field: 'ticker', 

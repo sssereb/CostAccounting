@@ -1,11 +1,13 @@
 ﻿using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
 using PortfolioApp.Application;
 using PortfolioApp.Application.DTOs;
 using PortfolioApp.Application.Repositories.Interfaces;
 using PortfolioApp.Domain;
-using PortfolioApp.Infrastructure.EfCore; // <-- AddPortfolioEfCoreSqlite
+using PortfolioApp.Infrastructure.EfCore;
+using PortfolioApp.Web.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,16 +44,18 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Portfolio API", Version = "v1" });
+    c.SupportNonNullableReferenceTypes();
+    c.SchemaFilter<RequireNonNullablePropertiesFilter>();
 });
 builder.Services.AddCors(opt =>
     opt.AddPolicy("Frontend", p =>
         p.WithOrigins("http://localhost:5173").AllowAnyHeader().AllowAnyMethod()));
 
-// ── JSON enums as strings
+// ── JSON enums as strings (Swashbuckle reads the MVC options, the endpoints use the HTTP ones)
 builder.Services.ConfigureHttpJsonOptions(opt =>
-{
-    opt.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
-});
+    opt.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+builder.Services.Configure<Microsoft.AspNetCore.Mvc.JsonOptions>(opt =>
+    opt.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 var app = builder.Build();
 app.UseCors("Frontend");
@@ -77,15 +81,15 @@ using (var scope = app.Services.CreateScope())
 // ───── Endpoints ─────
 
 // Fees
-app.MapGet("/fees/get", (IFeeRuleProvider p)
-    => Results.Ok(p.GetRules().Select(r => r.ToDto())));
+app.MapGet("/fees/get", (IFeeRuleProvider p) =>
+    TypedResults.Ok(p.GetRules().Select(r => r.ToDto()).ToList()));
 
-app.MapPost("/fees/save", (IFeeRuleProvider prov, [FromBody] IEnumerable<FeeRuleDto> body) =>
+app.MapPost("/fees/save", Results<NoContent, BadRequest<string>> (IFeeRuleProvider prov, [FromBody] IEnumerable<FeeRuleDto> body) =>
 {
     if (body.Any(r => !Enum.IsDefined(typeof(FeeType), r.Type)))
-        return Results.BadRequest("Unknown fee type.");
+        return TypedResults.BadRequest("Unknown fee type.");
     if (body.Any(r => r.Amount < 0))
-        return Results.BadRequest("Amount must be non-negative.");
+        return TypedResults.BadRequest("Amount must be non-negative.");
 
     try
     {
@@ -93,24 +97,24 @@ app.MapPost("/fees/save", (IFeeRuleProvider prov, [FromBody] IEnumerable<FeeRule
     }
     catch (InvalidOperationException ex)
     {
-        return Results.BadRequest(ex.Message);
+        return TypedResults.BadRequest(ex.Message);
     }
-    return Results.NoContent();
+    return TypedResults.NoContent();
 });
 
 app.MapDelete("/fees/delete", (IFeeRuleProvider p) =>
 {
     p.SetRules(Array.Empty<FeeRegistration>());
-    return Results.NoContent();
+    return TypedResults.NoContent();
 });
 
 // Assets
-app.MapGet("/assets/id/{ticker}", async (string ticker, IAssetRepository repo) =>
+app.MapGet("/assets/id/{ticker}", async Task<Results<Ok<Guid>, NotFound<string>>> (string ticker, IAssetRepository repo) =>
 {
     var asset = await repo.GetByTickerAsync(ticker);
     return asset is null
-        ? Results.NotFound($"Asset with ticker '{ticker}' not found")
-        : Results.Ok(asset.Id);
+        ? TypedResults.NotFound($"Asset with ticker '{ticker}' not found")
+        : TypedResults.Ok(asset.Id);
 });
 
 app.MapGet("/assets", async (IAssetRepository assetrepo, ILotRepository lotrepo)
@@ -131,23 +135,23 @@ app.MapGet("/assets", async (IAssetRepository assetrepo, ILotRepository lotrepo)
         .OrderBy(r => r.Ticker)
         .ToList();
 
-    
-    return Results.Ok(result);
+    return TypedResults.Ok(result);
 });
 
 // BUY
-app.MapPost("/trades/buy", async (BuyRequestDto dto, IAssetRepository repo, TradeService svc) =>
+app.MapPost("/trades/buy", async Task<Results<Ok, BadRequest<string>>> (BuyRequestDto dto, IAssetRepository repo, TradeService svc) =>
 {
     if (dto.AssetId is null && string.IsNullOrWhiteSpace(dto.Ticker))
-        return Results.BadRequest(new { error = "assetId or ticker required" });
+        return TypedResults.BadRequest("assetId or ticker required");
 
     var assetId = dto.AssetId ?? (await IAssetRepository.GetOrCreateAsync(repo, dto.Ticker!)).Id;
     await svc.BuyAsync(assetId, dto.Qty, dto.Price, dto.Date);
-    return Results.Ok();
+    return TypedResults.Ok();
 });
 
 // SELL
-app.MapPost("/trades/sell", async (SellRequestDto dto, IAssetRepository repo, TradeService svc) =>
+app.MapPost("/trades/sell", async Task<Results<Ok<SaleResult>, NotFound<string>, BadRequest<string>, ProblemHttpResult>> (
+    SellRequestDto dto, IAssetRepository repo, TradeService svc) =>
 {
     Guid assetId;
     if (dto.AssetId is not null)
@@ -155,26 +159,26 @@ app.MapPost("/trades/sell", async (SellRequestDto dto, IAssetRepository repo, Tr
     else if (!string.IsNullOrWhiteSpace(dto.Ticker))
     {
         var a = await repo.GetByTickerAsync(dto.Ticker);
-        if (a is null) return Results.NotFound($"Asset '{dto.Ticker}' not found");
+        if (a is null) return TypedResults.NotFound($"Asset '{dto.Ticker}' not found");
         assetId = a.Id;
     }
-    else return Results.BadRequest(new { error = "assetId or ticker required" });
+    else return TypedResults.BadRequest("assetId or ticker required");
 
     try
     {
         var res = await svc.SellAsync(assetId, dto.Qty, dto.Price, dto.Method, dto.Date);
-        return Results.Ok(res);
+        return TypedResults.Ok(res);
     }
     catch (InvalidOperationException ex)
     {
-        return Results.Problem(
+        return TypedResults.Problem(
             title: "Sell rejected",
             detail: ex.Message,
             statusCode: 409);
     }
     catch (Exception ex)
     {
-        return Results.Problem(title: "Sell failed", detail: ex.Message, statusCode: 500);
+        return TypedResults.Problem(title: "Sell failed", detail: ex.Message, statusCode: 500);
     }
 });
 
@@ -188,9 +192,10 @@ app.MapGet("/lots", async (ILotRepository lotRepo, IAssetRepository assetRepo) =
         .Join(assets, l => l.AssetId, a => a.Id, (l, a) => new { l, a })
         .OrderBy(t => t.a.Ticker)
         .ThenBy(t => t.l.PurchaseDate) 
-        .Select(t => new LotDto(t.a.Ticker, t.l.PurchaseDate, t.l.QtyInitial, t.l.QtyRemain, t.l.RawUnitCost, t.l.UnitCost));
+        .Select(t => new LotDto(t.l.Id, t.a.Ticker, t.l.PurchaseDate, t.l.QtyInitial, t.l.QtyRemain, t.l.RawUnitCost, t.l.UnitCost))
+        .ToList();
 
-    return Results.Ok(result);
+    return TypedResults.Ok(result);
 });
 
 // Trades
@@ -203,9 +208,10 @@ app.MapGet("/trades/all", async (ITradeRepository tradeRepo, IAssetRepository as
         .Join(assets, t => t.AssetId, a => a.Id, (t, a) => new { t, a })
         .OrderBy(t => t.t.Date)
         .ThenBy(t => t.a.Ticker) 
-        .Select(t => new TradeDto(t.a.Ticker, t.t.Date, t.t.Quantity, t.t.Price, t.t.ProfitGross, t.t.ProfitNet ));
+        .Select(t => new TradeDto(t.t.Id, t.a.Ticker, t.t.Date, t.t.Quantity, t.t.Price, t.t.ProfitGross, t.t.ProfitNet))
+        .ToList();
 
-    return Results.Ok(result);
+    return TypedResults.Ok(result);
 });
 
 app.UseDefaultFiles(); // index.html etc.

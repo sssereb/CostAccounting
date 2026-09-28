@@ -1,28 +1,13 @@
-import { http } from "../lib/http";
-import { useDebounce } from "../utils/useDebounce";
-import type { AxiosError } from "axios";
-// src/hooks/useTrades.ts
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { api, ApiError, unwrap, type Schemas } from "../api/client";
+import { useDebounce } from "../utils/useDebounce";
 
-
-
-
-/* ---------- DTO types ---------- */
-
-export type BuyRequestDto = {
-  assetId?: string;
-  ticker:   string;
-  qty:      number;
-  price:    number;
-  date:     string;
-};
-export type SellRequestDto = {
-  assetId?: string;
-  qty:     number;
-  price:   number;
-  method:  "FIFO" | "LIFO" | "Average";
-  date:    string;
-};
+export type Asset = Schemas["AssetDto"];
+export type Lot = Schemas["LotDto"];
+export type Trade = Schemas["TradeDto"];
+export type BuyRequestDto = Schemas["BuyRequestDto"];
+export type SellRequestDto = Schemas["SellRequestDto"];
+export type CostBasisMethod = Schemas["CostBasisMethod"];
 
 /* ---------- hook: resolve assetId by ticker ---------- */
 export function useAssetId(ticker: string) {
@@ -30,62 +15,47 @@ export function useAssetId(ticker: string) {
 
   return useQuery({
     queryKey: ["assetId", debounced],
-    queryFn: () =>
-      http.get<string>(`/assets/id/${debounced}`).then(r => r.data),
+    queryFn: () => unwrap(api.GET("/assets/id/{ticker}", { params: { path: { ticker: debounced } } })),
     enabled: !!debounced,
-    retry: (failureCount, error) => {
-      // retry at most once, and only on 5xx
-      if (failureCount >= 1) return false;
-      const status = (error as AxiosError).response?.status ?? 0;
-      return status >= 500;
-    }
+    // retry at most once, and only on 5xx
+    retry: (failureCount, error) => failureCount < 1 && error instanceof ApiError && error.status >= 500,
   });
 }
-
 
 /* ---------- hook: BUY ---------- */
 export function useBuy() {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: (p: BuyRequestDto) => http.post("/trades/buy", p),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["lots"] });     // refresh the lots grid
-      qc.invalidateQueries({ queryKey: ["assets"] });   // and the assets list
-    }
+    mutationFn: (body: BuyRequestDto) => unwrap(api.POST("/trades/buy", { body })),
+    onSuccess: () => invalidatePortfolio(qc),
   });
 }
-
 
 /* ---------- hook: SELL ---------- */
 export function useSell() {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: (p: SellRequestDto) => http.post("/trades/sell", p),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["lots"] });
-      qc.invalidateQueries({ queryKey: ["assets"] });
-    }
+    mutationFn: (body: SellRequestDto) => unwrap(api.POST("/trades/sell", { body })),
+    onSuccess: () => invalidatePortfolio(qc),
   });
 }
 
-export function useAssets() { 
-  return useQuery({ queryKey: ["assets"], queryFn: () => http.get<Asset[]>("/assets").then(r => r.data) }); 
-} 
-
-export type Asset = { ticker: string, qtyRemaining: number, lastPrice: number };
-
-export type Lot = { ticker:string; purchaseDate:string; qtyRemain:number; unitCost:number }; 
-
-export function useLots() 
-{ 
-  return useQuery({ queryKey: ["lots"], queryFn: () => http.get<Lot[]>("/lots").then(r => r.data) }); 
+function invalidatePortfolio(qc: ReturnType<typeof useQueryClient>) {
+  qc.invalidateQueries({ queryKey: ["lots"] });
+  qc.invalidateQueries({ queryKey: ["assets"] });
+  qc.invalidateQueries({ queryKey: ["trades"] });
 }
 
-export type Trade = { id:string; ticker:string; date:string; quantity:number; price:number; profitGross?:number; profitNet?:number };
+export function useAssets() {
+  return useQuery({ queryKey: ["assets"], queryFn: () => unwrap(api.GET("/assets")) });
+}
 
-export function useTrades() 
-{ 
-  return useQuery({ queryKey: ["trades"], queryFn: () => http.get<Trade[]>("/trades/all").then(r => r.data) }); 
+export function useLots() {
+  return useQuery({ queryKey: ["lots"], queryFn: () => unwrap(api.GET("/lots")) });
+}
+
+export function useTrades() {
+  return useQuery({ queryKey: ["trades"], queryFn: () => unwrap(api.GET("/trades/all")) });
 }

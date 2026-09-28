@@ -1,0 +1,522 @@
+{
+  "openapi": "3.0.4",
+  "info": {
+    "title": "Portfolio API",
+    "version": "v1"
+  },
+  "paths": {
+    "/fees/get": {
+      "get": {
+        "tags": [
+          "PortfolioApp.Web"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FeeRuleDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/fees/save": {
+      "post": {
+        "tags": [
+          "PortfolioApp.Web"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/FeeRuleDto"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/fees/delete": {
+      "delete": {
+        "tags": [
+          "PortfolioApp.Web"
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/assets/id/{ticker}": {
+      "get": {
+        "tags": [
+          "PortfolioApp.Web"
+        ],
+        "parameters": [
+          {
+            "name": "ticker",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/assets": {
+      "get": {
+        "tags": [
+          "PortfolioApp.Web"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssetDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trades/buy": {
+      "post": {
+        "tags": [
+          "PortfolioApp.Web"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BuyRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trades/sell": {
+      "post": {
+        "tags": [
+          "PortfolioApp.Web"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SellRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaleResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lots": {
+      "get": {
+        "tags": [
+          "PortfolioApp.Web"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LotDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trades/all": {
+      "get": {
+        "tags": [
+          "PortfolioApp.Web"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TradeDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AssetDto": {
+        "required": [
+          "lastPrice",
+          "qtyRemaining",
+          "ticker"
+        ],
+        "type": "object",
+        "properties": {
+          "ticker": {
+            "type": "string"
+          },
+          "qtyRemaining": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lastPrice": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "BuyRequestDto": {
+        "required": [
+          "date",
+          "price",
+          "qty"
+        ],
+        "type": "object",
+        "properties": {
+          "assetId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "ticker": {
+            "type": "string",
+            "nullable": true
+          },
+          "qty": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "price": {
+            "type": "number",
+            "format": "double"
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CostBasisMethod": {
+        "enum": [
+          "FIFO",
+          "LIFO",
+          "Average"
+        ],
+        "type": "string"
+      },
+      "FeeDirection": {
+        "enum": [
+          "None",
+          "Buy",
+          "Sell",
+          "Both"
+        ],
+        "type": "string"
+      },
+      "FeeRuleDto": {
+        "required": [
+          "amount",
+          "direction",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/FeeType"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "direction": {
+            "$ref": "#/components/schemas/FeeDirection"
+          }
+        },
+        "additionalProperties": false
+      },
+      "FeeType": {
+        "enum": [
+          "FixedPerTrade",
+          "FixedPerShare",
+          "Percent"
+        ],
+        "type": "string"
+      },
+      "LotDto": {
+        "required": [
+          "id",
+          "purchaseDate",
+          "qtyInitial",
+          "qtyRemain",
+          "rawUnitCost",
+          "ticker",
+          "unitCost"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ticker": {
+            "type": "string"
+          },
+          "purchaseDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "qtyInitial": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "qtyRemain": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rawUnitCost": {
+            "type": "number",
+            "format": "double"
+          },
+          "unitCost": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SaleResult": {
+        "required": [
+          "grossProfit",
+          "netProfit",
+          "remainingCostPerShare",
+          "remainingShares",
+          "soldCostPerShare"
+        ],
+        "type": "object",
+        "properties": {
+          "remainingShares": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "soldCostPerShare": {
+            "type": "number",
+            "format": "double"
+          },
+          "remainingCostPerShare": {
+            "type": "number",
+            "format": "double"
+          },
+          "grossProfit": {
+            "type": "number",
+            "format": "double"
+          },
+          "netProfit": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SellRequestDto": {
+        "required": [
+          "date",
+          "method",
+          "price",
+          "qty"
+        ],
+        "type": "object",
+        "properties": {
+          "assetId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "ticker": {
+            "type": "string",
+            "nullable": true
+          },
+          "qty": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "price": {
+            "type": "number",
+            "format": "double"
+          },
+          "method": {
+            "$ref": "#/components/schemas/CostBasisMethod"
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "TradeDto": {
+        "required": [
+          "date",
+          "id",
+          "price",
+          "profitGross",
+          "profitNet",
+          "quantity",
+          "ticker"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ticker": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "price": {
+            "type": "number",
+            "format": "double"
+          },
+          "profitGross": {
+            "type": "number",
+            "format": "double"
+          },
+          "profitNet": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

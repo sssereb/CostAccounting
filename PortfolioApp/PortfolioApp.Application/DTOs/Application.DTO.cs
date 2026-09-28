@@ -15,6 +15,7 @@ namespace PortfolioApp.Application.DTOs
 
     public record AssetDto(string Ticker, int QtyRemaining, decimal LastPrice);
     public record LotDto(
+        Guid Id,
         string Ticker,
         DateTime PurchaseDate,
         int QtyInitial,
@@ -23,6 +24,7 @@ namespace PortfolioApp.Application.DTOs
         decimal UnitCost);
 
     public record TradeDto(
+        Guid Id,
         string Ticker,
         DateTime Date,
         int Quantity,

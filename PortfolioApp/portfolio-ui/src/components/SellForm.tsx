@@ -4,23 +4,25 @@ import {
     Stack, TextField, Button, FormControl, InputLabel, Select, MenuItem,
     Autocomplete, Box, Alert
 } from "@mui/material";
-import { useSell, useAssetId, useAssets, type Asset } from "../hooks/useTrades";
-import type { SellRequestDto } from "../hooks/useTrades";
+import { useSell, useAssetId, useAssets, type Asset, type CostBasisMethod, type SellRequestDto } from "../hooks/useTrades";
 import { useDebounce } from "../utils/useDebounce";
 import { getErrorMessage } from "../utils/useErrors";
 
 const todayIsoDate = () => new Date().toISOString().slice(0, 10);
 const isoFromDateInput = (yyyyMmDd: string) => `${yyyyMmDd}T00:00:00`;
 
+// Keyed by the generated enum: a value the API does not accept, or a missing one, fails tsc.
+const METHOD_LABELS = { FIFO: "FIFO", LIFO: "LIFO", Average: "AVG" } satisfies Record<CostBasisMethod, string>;
+
 export default function SellForm() {
     const [ticker, setTicker] = useState("");
     const [qty, setQty] = useState<number>(0);
     const [price, setPrice] = useState<number>(0);
-    const [method, setMethod] = useState<SellRequestDto["method"]>("FIFO");
+    const [method, setMethod] = useState<CostBasisMethod>("FIFO");
     const [date, setDate] = useState<string>(todayIsoDate());
 
     const assetsQ = useAssets();
-    const assets = (assetsQ.data ?? []) as Asset[];
+    const assets: Asset[] = assetsQ.data ?? [];
 
     // resolve the assetId for the typed ticker
     const debouncedTicker = useDebounce(ticker.trim().toUpperCase(), 300);
@@ -123,11 +125,11 @@ export default function SellForm() {
                     labelId="sell-method-label"
                     label="Method"
                     value={method}
-                    onChange={(e) => setMethod((e.target.value as SellRequestDto["method"]) ?? "FIFO")}
+                    onChange={(e) => setMethod(e.target.value as CostBasisMethod)}
                 >
-                    <MenuItem value="FIFO">FIFO</MenuItem>
-                    <MenuItem value="LIFO">LIFO</MenuItem>
-                    <MenuItem value="Average">AVG</MenuItem>
+                    {Object.entries(METHOD_LABELS).map(([value, label]) => (
+                        <MenuItem key={value} value={value}>{label}</MenuItem>
+                    ))}
                 </Select>
             </FormControl>
             

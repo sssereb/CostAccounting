@@ -28,7 +28,7 @@ export default function BuyForm() {
 
   // all assets for the dropdown
   const assetsQ = useAssets();
-  const assets = (assetsQ.data ?? []) as Asset[];
+  const assets: Asset[] = assetsQ.data ?? [];
 
   // look up the assetId for the typed ticker (if the asset exists)
   const debouncedTicker = useDebounce(ticker.trim().toUpperCase(), 300);
@@ -75,9 +75,7 @@ export default function BuyForm() {
           <li {...props} key={opt.ticker}>
             <Box sx={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
               <span>{opt.ticker}</span>
-              {"qtyRemain" in opt ? (
-                <span style={{ opacity: 0.7 }}>{(opt as Asset & { qtyRemain: number }).qtyRemain}</span>
-              ) : null}
+              <span style={{ opacity: 0.7 }}>{opt.qtyRemaining}</span>
             </Box>
           </li>
         )}
