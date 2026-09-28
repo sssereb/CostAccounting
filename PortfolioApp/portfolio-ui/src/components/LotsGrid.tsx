@@ -1,5 +1,6 @@
 
 import AppDataGrid from "./AppDataGrid";
+import { LoadError } from "./LoadError";
 import type { GridColDef } from '@mui/x-data-grid';
 import { useLots, type Lot } from '../hooks/useTrades';
 
@@ -7,15 +8,7 @@ export function LotsGrid() {
   const { data = [], isLoading, error, refetch } = useLots();
 
   if (isLoading) return <p>Loading lots…</p>;
-  if (error)
-    return (
-      <p className="text-red-500">
-        Failed to load lots —
-        <button onClick={() => refetch()} className="underline ml-1">
-          retry
-        </button>
-      </p>
-    );
+  if (error) return <LoadError what="lots" onRetry={() => refetch()} />;
   if (!data || data.length === 0) return <p>(no lots yet)</p>;
 
   const rows: Lot[] = data;
@@ -26,9 +19,10 @@ export function LotsGrid() {
       flex: 1,
     },
 
-    { field: 'purchaseDate', 
+    { field: 'purchaseDate',
       headerName: 'Purchase Date',
       flex: 1,
+      valueFormatter: (value: string) => value.slice(0, 10),
     },
     {
       field: 'qtyInitial',

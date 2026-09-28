@@ -135,7 +135,7 @@ export default function PortfolioTabs() {
                     transform: "translateY(-1px)",
                   },
                   "&.Mui-selected": {
-                    bgcolor:
+                    background:
                       "linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.08))",
                     color: "#fff",
                     boxShadow:

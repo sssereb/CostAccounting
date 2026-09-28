@@ -136,10 +136,10 @@ export default function SellForm() {
             </FormControl>
             
             {sell.isError && (
-  <Alert severity="error" sx={{ ml: 1 }}>
-    {getErrorMessage(sell.error)}
-  </Alert>
-)}
+                <Alert severity="error" sx={{ ml: 1 }}>
+                    {getErrorMessage(sell.error)}
+                </Alert>
+            )}
 
         </Stack>
     );

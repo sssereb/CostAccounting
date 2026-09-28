@@ -14,6 +14,7 @@ import {
   type Asset,
 } from "../hooks/useTrades";
 import { useDebounce } from "../utils/useDebounce";
+import { getErrorMessage } from "../utils/useErrors";
 
 const todayIsoDate = () => new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
 const isoFromDateInput = (yyyyMmDd: string) => `${yyyyMmDd}T00:00:00`;
@@ -115,7 +116,7 @@ export default function BuyForm() {
 
       {buy.isError && (
         <Alert severity="error" sx={{ ml: 1 }}>
-          Buy failed
+          {getErrorMessage(buy.error)}
         </Alert>
       )}
 

@@ -9,7 +9,7 @@ const darkTheme = createTheme({
 export default function App() {
   return (
     <ThemeProvider theme={darkTheme}>
-      <CssBaseline />
+      <CssBaseline enableColorScheme />
       <Container maxWidth={false} sx={{ py: 2 }}>
         
       <PortfolioTabs />

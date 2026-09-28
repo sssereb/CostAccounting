@@ -32,6 +32,7 @@ export default function AppDataGrid<R extends GridValidRowModel = GridValidRowMo
     <DataGrid<R>
       density="compact"
       disableRowSelectionOnClick
+      showToolbar
       slotProps={{
         toolbar: { showQuickFilter: true, quickFilterProps: { debounceMs: 300 }},
       }}
