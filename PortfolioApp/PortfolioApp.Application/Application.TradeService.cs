@@ -55,12 +55,12 @@ public sealed class TradeService
         var lots = (await _lots.GetForAssetAsync(assetId, ct)).ToList();
         if (lots.Sum(l => l.QtyRemain) < qty) throw new InvalidOperationException("Not enough shares to sell.");
 
-        var res = _factory.Get(method).Sell(lots, qty, price);
-
         var fees = _fees.CalcAll(qty, price, FeeDirection.Sell).ToList();
         var totalFee = fees.Sum(f => f.Amount);
 
-        var trade = new Trade(Guid.NewGuid(), assetId, date, -qty, price, res.GrossProfit, res.GrossProfit - totalFee, fees);
+        var res = _factory.Get(method).Sell(lots, qty, price, totalFee);
+
+        var trade = new Trade(Guid.NewGuid(), assetId, date, -qty, price, res.GrossProfit, res.NetProfit, fees);
 
         // Lots are read without a transaction; the lot version check at write time detects concurrent sales.
         await _uow.ExecuteInTransactionAsync(async token =>
@@ -70,7 +70,7 @@ public sealed class TradeService
             await _trades.AddAsync(trade, token);
         }, ct);
 
-        return res with { NetProfit = res.GrossProfit - totalFee };
+        return res;
     }
 
     public async Task<decimal> GetRemainingCostPerShareAsync(Guid assetId, CancellationToken ct = default)

@@ -9,8 +9,11 @@ public class Lot
     public int QtyInitial { get; set; }
     public int QtyRemain { get; set; }
     
-    public decimal RawUnitCost { get; init; } 
-    public decimal UnitCost { get; init; } 
+    /// <summary>Purchase price per share, without fees.</summary>
+    public decimal RawUnitCost { get; private set; }
+
+    /// <summary>Cost per share including buy fees; this is the cost basis.</summary>
+    public decimal UnitCost { get; private set; }
 
     /// <summary>Optimistic concurrency token, incremented on every update.</summary>
     public int Version { get; private set; }
@@ -27,5 +30,12 @@ public class Lot
         QtyRemain    = quantity;
         RawUnitCost  = rawUnitCost;
         UnitCost     = unitCostIncludingFees;
+    }
+
+    /// <summary>Moves the lot into an average-cost pool: its remaining shares take the pooled costs.</summary>
+    public void ApplyAverageCost(decimal rawUnitCost, decimal unitCost)
+    {
+        RawUnitCost = rawUnitCost;
+        UnitCost    = unitCost;
     }
 }

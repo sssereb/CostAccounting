@@ -10,15 +10,14 @@ public abstract class CostBasisStrategyBase : ICostBasisStrategy
     protected abstract IOrderedEnumerable<Lot> OrderLots(IEnumerable<Lot> lots);
 
     /// Template method; average cost overrides it.
-    public virtual SaleResult Sell(IList<Lot> lots, int qty, decimal price)
+    public virtual SaleResult Sell(IList<Lot> lots, int qty, decimal price, decimal sellFees)
     {
-        
         if (qty > lots.Sum(l => l.QtyRemain))
             throw new InvalidOperationException("Not enough shares");
         
         var ordered = OrderLots(lots);
 
-        int need = qty; decimal costSold = 0, profit = 0, gross = 0;
+        int need = qty; decimal costSold = 0, rawCostSold = 0;
         foreach (var lot in ordered)
         {
             if (need == 0) break;
@@ -26,9 +25,8 @@ public abstract class CostBasisStrategyBase : ICostBasisStrategy
             need -= take;
             lot.QtyRemain -= take;
 
-            costSold += take * lot.UnitCost;
-            profit   += take * (price - lot.RawUnitCost);
-            gross    += take * (price - lot.UnitCost);
+            costSold    += take * lot.UnitCost;
+            rawCostSold += take * lot.RawUnitCost;
         }
 
         int     remQty   = lots.Sum(l => l.QtyRemain);
@@ -37,7 +35,7 @@ public abstract class CostBasisStrategyBase : ICostBasisStrategy
         return new SaleResult(remQty,
             costSold / qty,
             remQty == 0 ? 0 : remCost / remQty,
-            GrossProfit: gross,
-            NetProfit: 0) ;
+            GrossProfit: qty * price - rawCostSold,
+            NetProfit:   qty * price - costSold - sellFees);
     }
 }

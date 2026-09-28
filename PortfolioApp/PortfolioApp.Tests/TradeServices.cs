@@ -91,7 +91,7 @@ public class TradeServiceTests
     /* ----------------------------------------------------------------
      * SELL: "Sell: Lot & Trade saved with proper fields"
      * --------------------------------------------------------------*/
-    [Fact(DisplayName = "Sell: proper NetProfit")]
+    [Fact(DisplayName = "Sell: passes sell fees to the strategy and stores both profits")]
     public async Task Sell_PersistsEverything()
     {
         var assetId = Guid.NewGuid();
@@ -112,19 +112,19 @@ public class TradeServiceTests
             RemainingShares: 0,
             SoldCostPerShare: 95m,
             RemainingCostPerShare: 0,
-            GrossProfit: 250m,
-            NetProfit: 0m);
+            GrossProfit: 500m,
+            NetProfit: 243m);
 
         var strategy = new Mock<ICostBasisStrategy>();
-        strategy.Setup(s => s.Sell(It.IsAny<IList<Lot>>(), 50, 100m))
+        strategy.Setup(s => s.Sell(It.IsAny<IList<Lot>>(), 50, 100m, 7m))
                 .Returns(stub);
 
         var factory = new Mock<ICostBasisFactory>();
         factory.Setup(f => f.Get(CostBasisMethod.FIFO)).Returns(strategy.Object);
 
         var feeSvc = new Mock<IFeeService>();
-        feeSvc.Setup(f => f.CalcAll(It.IsAny<int>(), It.IsAny<decimal>(), It.IsAny<FeeDirection>()))
-              .Returns(Array.Empty<Fee>());   // no fees
+        feeSvc.Setup(f => f.CalcAll(50, 100m, FeeDirection.Sell))
+              .Returns(new[] { new Fee(FeeType.FixedPerTrade, 7m) });
 
         var service = new TradeService(
             Mock.Of<IAssetRepository>(),
@@ -135,12 +135,13 @@ public class TradeServiceTests
             new NoOpUnitOfWork());
 
         var res = await service.SellAsync(assetId, 50, 100m, CostBasisMethod.FIFO, DateTime.Today);
-        Assert.Equal(stub.GrossProfit, res.NetProfit);  
+        Assert.Equal(stub, res);
 
         lotsRepo.Verify(r => r.SaveAsync(It.IsAny<Lot>(), It.IsAny<CancellationToken>()),
                         Times.AtLeastOnce());
         tradeRepo.Verify(r => r.AddAsync(It.Is<Trade>(t =>
-                t.AssetId == assetId && t.Quantity == -50),
+                t.AssetId == assetId && t.Quantity == -50 &&
+                t.ProfitGross == 500m && t.ProfitNet == 243m),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 }

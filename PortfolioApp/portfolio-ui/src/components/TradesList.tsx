@@ -45,13 +45,13 @@ export function TradesList() {
     },
     {
       field: 'profitGross',
-      headerName: 'Profit (gross)',
+      headerName: 'Gross profit (before fees)',
       type: 'number',
       flex: 1,
     },
     {
       field: 'profitNet',
-      headerName: 'Profit (net)',
+      headerName: 'Net profit (after all fees)',
       type: 'number',
       flex: 1,
     }
