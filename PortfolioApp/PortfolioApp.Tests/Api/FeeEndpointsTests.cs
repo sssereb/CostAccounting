@@ -8,7 +8,7 @@ namespace PortfolioApp.Tests.Api;
 // Fee rules live in a singleton, so every test gets its own app instance.
 public class FeeEndpointsTests
 {
-    [Fact(DisplayName = "GET /fees/get returns the seeded demo rules")]
+    [Fact(DisplayName = "GET /api/fees/get returns the seeded demo rules")]
     public async Task Get_ReturnsSeededRules()
     {
         using var factory = new ApiFactory();
@@ -20,7 +20,7 @@ public class FeeEndpointsTests
         Assert.All(rules, r => Assert.Equal(FeeDirection.Sell, r.Direction));
     }
 
-    [Fact(DisplayName = "POST /fees/save with a Percent rule persists it and GET returns it")]
+    [Fact(DisplayName = "POST /api/fees/save with a Percent rule persists it and GET returns it")]
     public async Task Save_PercentRule_IsReturnedByGet()
     {
         using var factory = new ApiFactory();
@@ -39,7 +39,7 @@ public class FeeEndpointsTests
             rules);
     }
 
-    [Theory(DisplayName = "POST /fees/save rejects invalid rules with 400 and keeps the old ones")]
+    [Theory(DisplayName = "POST /api/fees/save rejects invalid rules with 400 and keeps the old ones")]
     [InlineData("""[{"type":"PercentOfValue","amount":0.01,"direction":"Sell"}]""")]
     [InlineData("""[{"type":"Percent","amount":-1,"direction":"Sell"}]""")]
     [InlineData("""[{"type":"Percent","amount":0.01,"direction":"Sell"},{"type":"Percent","amount":0.01,"direction":"Sell"}]""")]
@@ -55,7 +55,7 @@ public class FeeEndpointsTests
         Assert.Equal(2, rules.Count);
     }
 
-    [Fact(DisplayName = "DELETE /fees/delete clears all rules")]
+    [Fact(DisplayName = "DELETE /api/fees/delete clears all rules")]
     public async Task Delete_ClearsRules()
     {
         using var factory = new ApiFactory();

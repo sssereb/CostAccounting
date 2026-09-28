@@ -1,4 +1,4 @@
-using PortfolioApp.Domain;          // Fee, FeeDirection
+using PortfolioApp.Domain;
 
 namespace PortfolioApp.Application.Fees;
 
@@ -7,13 +7,11 @@ namespace PortfolioApp.Application.Fees;
 /// On every call it builds concrete calculators from the rules
 /// (Type + Amount + Direction) stored in <see cref="IFeeRuleProvider"/>.
 /// </summary>
-///
-///
 public interface IFeeService
 {
     /// <param name="qty">Number of shares.</param>
     /// <param name="price">Price per share (or contract).</param>
-    /// <param name="direction">Buy / Sell (or Both if needed).</param>
+    /// <param name="direction">Buy or Sell; rules marked Both apply to either.</param>
     IReadOnlyList<Fee> CalcAll(int qty, decimal price, FeeDirection direction);
 }
 

@@ -6,7 +6,6 @@ namespace PortfolioApp.Application.Repositories.InMemory;
 
 public class InMemoryAssetRepository : IAssetRepository
 {
-    // thread-safe collections, just in case
     private readonly ConcurrentDictionary<Guid, Asset> _byId = new();
     private readonly ConcurrentDictionary<string, Asset> _byTicker =
         new(StringComparer.OrdinalIgnoreCase);

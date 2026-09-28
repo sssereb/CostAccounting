@@ -14,7 +14,7 @@ public class TradingEndpointsTests : IClassFixture<ApiFactory>
 
     public TradingEndpointsTests(ApiFactory factory) => _client = factory.CreateClient();
 
-    [Fact(DisplayName = "POST /trades/buy creates the asset and a lot visible in /assets, /assets/id and /lots")]
+    [Fact(DisplayName = "POST /api/trades/buy creates the asset and a lot visible in /assets, /assets/id and /lots")]
     public async Task Buy_CreatesAssetAndLot()
     {
         await BuyAsync("BUY1", 100, 10m, "2025-01-01");
@@ -31,18 +31,18 @@ public class TradingEndpointsTests : IClassFixture<ApiFactory>
         Assert.NotEqual(Guid.Empty, lot.Id);
     }
 
-    [Fact(DisplayName = "GET /assets/id/{ticker} returns 404 for an unknown ticker")]
+    [Fact(DisplayName = "GET /api/assets/id/{ticker} returns 404 for an unknown ticker")]
     public async Task AssetId_Unknown_Returns404()
         => await HttpAssert.StatusAsync(HttpStatusCode.NotFound, await _client.GetAsync("/api/assets/id/NOPE"));
 
-    [Fact(DisplayName = "POST /trades/buy without ticker or assetId returns 400")]
+    [Fact(DisplayName = "POST /api/trades/buy without ticker or assetId returns 400")]
     public async Task Buy_WithoutTicker_Returns400()
     {
         var res = await _client.PostAsJsonAsync("/api/trades/buy", new { qty = 1, price = 1m, date = "2025-01-01T00:00:00" });
         await HttpAssert.StatusAsync(HttpStatusCode.BadRequest, res);
     }
 
-    [Fact(DisplayName = "POST /trades/buy that fails validation does not create the asset")]
+    [Fact(DisplayName = "POST /api/trades/buy that fails validation does not create the asset")]
     public async Task Buy_Invalid_DoesNotCreateAsset()
     {
         var res = await _client.PostAsJsonAsync("/api/trades/buy", new { ticker = "ORPHAN", qty = 0, price = 1m, date = "2025-01-01T00:00:00" });
@@ -51,7 +51,7 @@ public class TradingEndpointsTests : IClassFixture<ApiFactory>
         await HttpAssert.StatusAsync(HttpStatusCode.NotFound, await _client.GetAsync("/api/assets/id/ORPHAN"));
     }
 
-    [Fact(DisplayName = "POST /trades/buy and /trades/sell with an unknown assetId return 404")]
+    [Fact(DisplayName = "POST /api/trades/buy and /api/trades/sell with an unknown assetId return 404")]
     public async Task UnknownAssetId_Returns404()
     {
         var assetId = Guid.NewGuid();
@@ -63,7 +63,7 @@ public class TradingEndpointsTests : IClassFixture<ApiFactory>
         await HttpAssert.StatusAsync(HttpStatusCode.NotFound, sell);
     }
 
-    [Fact(DisplayName = "POST /trades/sell FIFO returns gross and net profit and records the trade")]
+    [Fact(DisplayName = "POST /api/trades/sell FIFO returns gross and net profit and records the trade")]
     public async Task Sell_Fifo_ReturnsProfitsAndRecordsTrade()
     {
         await BuyAsync("SELL1", 100, 10m, "2025-01-01");
@@ -80,7 +80,7 @@ public class TradingEndpointsTests : IClassFixture<ApiFactory>
         Assert.Contains(trades, t => t.Ticker == "SELL1" && t.Quantity == 100);
     }
 
-    [Fact(DisplayName = "POST /trades/sell with method \"Average\" (the value the UI sends) succeeds")]
+    [Fact(DisplayName = "POST /api/trades/sell with method \"Average\" (the value the UI sends) succeeds")]
     public async Task Sell_Average_Succeeds()
     {
         await BuyAsync("AVG1", 10, 10m, "2025-01-01");
@@ -93,14 +93,14 @@ public class TradingEndpointsTests : IClassFixture<ApiFactory>
         Assert.Equal(140m, sale.NetProfit);             // 150 - (7 + 1% of 300)
     }
 
-    [Fact(DisplayName = "POST /trades/sell with an unknown method returns 400")]
+    [Fact(DisplayName = "POST /api/trades/sell with an unknown method returns 400")]
     public async Task Sell_UnknownMethod_Returns400()
     {
         await BuyAsync("BAD1", 10, 10m, "2025-01-01");
         await HttpAssert.StatusAsync(HttpStatusCode.BadRequest, await SellAsync("BAD1", 5, 12m, "AVG"));
     }
 
-    [Fact(DisplayName = "POST /trades/sell more than held returns 409 and changes nothing")]
+    [Fact(DisplayName = "POST /api/trades/sell more than held returns 409 and changes nothing")]
     public async Task Sell_Oversell_Returns409()
     {
         await BuyAsync("OVER1", 10, 10m, "2025-01-01");
