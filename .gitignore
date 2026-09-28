@@ -1,0 +1,28 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.DotSettings.user
+
+# IDE
+.vs/
+.idea/
+.vscode/
+
+# Node
+node_modules/
+dist/
+npm-debug.log*
+
+# macOS
+.DS_Store
+
+# Local SQLite databases
+*.db
+*.db-shm
+*.db-wal
+PortfolioApp/Data/
+
+# Built frontend bundles served by the Web project
+PortfolioApp/PortfolioApp.Web/wwwroot/assets/
