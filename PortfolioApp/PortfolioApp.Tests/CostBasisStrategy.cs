@@ -1,9 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using PortfolioApp.Application.Strategies;   // FifoStrategy, LifoStrategy, AvgStrategy, ICostBasisStrategy
 using PortfolioApp.Domain;            // Lot, SaleResult
-using Xunit;
 
 namespace PortfolioApp.Tests;
 

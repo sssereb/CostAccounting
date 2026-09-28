@@ -4,13 +4,13 @@ import {
   type GridValidRowModel,
 } from "@mui/x-data-grid";
 
-export type AppDataGridProps<R extends GridValidRowModel = any> = Omit<
+export type AppDataGridProps<R extends GridValidRowModel = GridValidRowModel> = Omit<
   DataGridProps<R>,
   "slots" | "slotProps" | "density" | "disableRowSelectionOnClick" | "autoHeight"
 > & {  fixedHeight?: number;
 };
 
-export default function AppDataGrid<R extends GridValidRowModel = any>(
+export default function AppDataGrid<R extends GridValidRowModel = GridValidRowModel>(
   props: AppDataGridProps<R>
 ) {
   const {

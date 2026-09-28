@@ -13,20 +13,19 @@ static string GetDefaultDbPath()
     return Path.Combine(appDir, "portfolio.db");
 }
 
-// поддерживаем параметр: --db=/полный/путь/к/файлу.db
 var dbPath  = Environment.GetEnvironmentVariable("DB_PATH") ?? GetDefaultDbPath();
 
 using var host = Host.CreateDefaultBuilder(args)
     .ConfigureLogging(lb => lb.ClearProviders().AddConsole())
     .ConfigureServices(services =>
     {
-        // регистрируем DbContext и всё, что нужно для миграций
+        // DbContext and everything migrations need
         services.AddPortfolioEfCoreSqlite();
     })
     .Build();
 
 using var scope = host.Services.CreateScope();
 var migrator = scope.ServiceProvider.GetRequiredService<IDbMigrator>();
-await migrator.MigrateAsync();              // ← создаст файл БД и таблицы по миграциям
+await migrator.MigrateAsync();              // creates the database file and tables from migrations
 
 Console.WriteLine($"DB created/updated at: {dbPath}");

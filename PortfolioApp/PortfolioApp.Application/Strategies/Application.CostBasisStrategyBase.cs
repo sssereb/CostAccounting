@@ -6,10 +6,10 @@ public abstract class CostBasisStrategyBase : ICostBasisStrategy
 {
     public abstract CostBasisMethod Method { get; }
 
-    /// Определяет порядок лотов (FIFO / LIFO / HIFO …)
+    /// Defines the order in which lots are consumed (FIFO / LIFO / HIFO …)
     protected abstract IOrderedEnumerable<Lot> OrderLots(IEnumerable<Lot> lots);
 
-    /// Шаблонный метод; для AVG его можно переопределить.
+    /// Template method; average cost overrides it.
     public virtual SaleResult Sell(IList<Lot> lots, int qty, decimal price)
     {
         

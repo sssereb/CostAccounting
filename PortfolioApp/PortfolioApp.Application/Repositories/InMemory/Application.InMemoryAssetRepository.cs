@@ -6,7 +6,7 @@ namespace PortfolioApp.Application.Repositories.InMemory;
 
 public class InMemoryAssetRepository : IAssetRepository
 {
-    // потокобезопасные коллекции (на всякий случай)
+    // thread-safe collections, just in case
     private readonly ConcurrentDictionary<Guid, Asset> _byId = new();
     private readonly ConcurrentDictionary<string, Asset> _byTicker =
         new(StringComparer.OrdinalIgnoreCase);
@@ -31,7 +31,7 @@ public class InMemoryAssetRepository : IAssetRepository
 
         var t = ticker.Trim().ToUpperInvariant();
 
-        // если уже есть — возвращаем существующий
+        // return the existing asset if the ticker is already known
         var existing = _byTicker.Values.FirstOrDefault(a => a.Ticker.Equals(t, StringComparison.OrdinalIgnoreCase));
         if (existing is not null) return Task.FromResult(existing);
 

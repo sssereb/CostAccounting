@@ -1,11 +1,8 @@
-// Application.ServiceRegistration.cs  (в любом *.Application* файле)
-
 using Microsoft.Extensions.DependencyInjection;
 using PortfolioApp.Application.Fees;
 using PortfolioApp.Application.Repositories.InMemory;
 using PortfolioApp.Application.Repositories.Interfaces;
 using PortfolioApp.Application.Strategies;
-using PortfolioApp.Domain;
 using PortfolioApp.Infrastructure.Fees;
 
 namespace PortfolioApp.Application;
@@ -29,7 +26,7 @@ public static class PortfolioServices
             .AddSingleton<ICostBasisStrategy, AverageCostStrategy>()
             .AddSingleton<ICostBasisFactory, CostBasisFactory>()
 
-            /* ── Fee calculators (конкретные + интерфейс) ───────────── */
+            /* ── Fee rules and fee service ─────────────────────────── */
             .AddSingleton<IFeeRuleProvider>(_ =>
                 new MemoryFeeRuleProvider(Array.Empty<FeeRegistration>()))
             .AddSingleton<IFeeService, FeeService>()

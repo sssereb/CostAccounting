@@ -22,10 +22,10 @@ export default function SellForm() {
     const assetsQ = useAssets();
     const assets = (assetsQ.data ?? []) as Asset[];
 
-    // получаем assetId по введённому тикеру
+    // resolve the assetId for the typed ticker
     const debouncedTicker = useDebounce(ticker.trim().toUpperCase(), 300);
     const assetIdQ = useAssetId(debouncedTicker);
-    const assetId = assetIdQ.data ?? ""; // всегда строка
+    const assetId = assetIdQ.data ?? ""; // always a string
 
     const sell = useSell();
 

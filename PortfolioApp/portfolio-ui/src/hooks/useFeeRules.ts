@@ -1,17 +1,9 @@
 // src/hooks/useFeeRules.ts
-//
-// React-Query хуки для новых конечных точек:
-//
-//   GET    /fees/get       – получить список правил
-//   PUT    /fees/put       – заменить список
-//   DELETE /fees/delete    – очистить все правила
-//
-// Использует общий axios-инстанс `http` из src/lib/http.ts.
-//
+// React Query hooks for the fee rules endpoints.
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { http } from "../lib/http";
 
-/* ---------- типы DTO ---------- */
+/* ---------- DTO types ---------- */
 export type FeeType = "FixedPerTrade" | "FixedPerShare" | "PercentOfValue";
 export type FeeDirection = "Buy" | "Sell" | "Both";
 

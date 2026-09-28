@@ -7,17 +7,16 @@ public interface IFeeCalculator
     Fee Calc(int qty, decimal pricePerShare);
 }
 
-/* --- конкретные правила --- */
 public sealed class FixedPerTrade : IFeeCalculator
 {
-    private readonly decimal _fee;          // например 1.00$
+    private readonly decimal _fee;          // e.g. $1.00
     public FixedPerTrade(decimal fee) => _fee = fee;
     public Fee Calc(int _, decimal __) => new(FeeType.FixedPerTrade, _fee);
 }
 
 public sealed class FixedPerShare : IFeeCalculator
 {
-    private readonly decimal _perShare;     // напр. 0.005$ за акцию
+    private readonly decimal _perShare;     // e.g. $0.005 per share
     public FixedPerShare(decimal cents) => _perShare = cents;
     public Fee Calc(int qty, decimal __) => new(FeeType.FixedPerShare, qty * _perShare);
 }

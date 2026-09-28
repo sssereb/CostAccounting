@@ -13,11 +13,10 @@ import {
   useAssetId,
   useAssets,
   type Asset,
-} from "../hooks/useTrades";          // подправь путь если у тебя иначе
-import type { BuyRequestDto } from "../hooks/useTrades"; // подправь путь если нужно
-import { useDebounce } from "../utils/useDebounce"; // подправь путь если нужно
+} from "../hooks/useTrades";
+import type { BuyRequestDto } from "../hooks/useTrades";
+import { useDebounce } from "../utils/useDebounce";
 
-// Можно вынести в src/utils/date.ts
 const todayIsoDate = () => new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
 const isoFromDateInput = (yyyyMmDd: string) => `${yyyyMmDd}T00:00:00`;
 
@@ -27,11 +26,11 @@ export default function BuyForm() {
   const [price, setPrice] = useState<number>(0);
   const [date, setDate] = useState<string>(todayIsoDate());
 
-  // все активы для выпадающего списка
+  // all assets for the dropdown
   const assetsQ = useAssets();
   const assets = (assetsQ.data ?? []) as Asset[];
 
-  // по введённому тикеру ищем assetId (если уже существует)
+  // look up the assetId for the typed ticker (if the asset exists)
   const debouncedTicker = useDebounce(ticker.trim().toUpperCase(), 300);
   const assetIdQ = useAssetId(debouncedTicker);
   const buy = useBuy();
@@ -44,7 +43,7 @@ export default function BuyForm() {
 
     const base = { ticker, qty, price, date: isoFromDateInput(date) };
 
-    // если нашли существующий assetId — шлём его; иначе — шлём тикер для создания
+    // send the existing assetId if found, otherwise send the ticker so the asset is created
     const dto: BuyRequestDto = assetIdQ.data
       ? { ...base, assetId: assetIdQ.data }
       : { ...base, ticker: debouncedTicker };
@@ -52,7 +51,7 @@ export default function BuyForm() {
     buy.mutate(dto);
   };
 
-  // текущее выбранное значение для Autocomplete (объект)
+  // currently selected Autocomplete value (object)
   const selectedAsset =
     assets.find((a) => a.ticker.toUpperCase() === ticker.toUpperCase()) ?? null;
 
@@ -61,7 +60,7 @@ export default function BuyForm() {
 
   return (
     <Stack direction="row" spacing={2} alignItems="center" useFlexGap flexWrap="wrap">
-      {/* Ticker как выпадающий список + свободный ввод */}
+      {/* Ticker: dropdown plus free text input */}
       <Autocomplete<Asset, false, false, true>
         freeSolo
         options={assets}
@@ -77,7 +76,7 @@ export default function BuyForm() {
             <Box sx={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
               <span>{opt.ticker}</span>
               {"qtyRemain" in opt ? (
-                <span style={{ opacity: 0.7 }}>{(opt as any).qtyRemain}</span>
+                <span style={{ opacity: 0.7 }}>{(opt as Asset & { qtyRemain: number }).qtyRemain}</span>
               ) : null}
             </Box>
           </li>
@@ -127,7 +126,7 @@ export default function BuyForm() {
 
       {buy.isError && (
         <Alert severity="error" sx={{ ml: 1 }}>
-          Ошибка покупки
+          Buy failed
         </Alert>
       )}
 

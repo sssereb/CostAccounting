@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using PortfolioApp.Application.Repositories.Interfaces;
 using PortfolioApp.Domain;
@@ -18,7 +13,7 @@ public sealed class EfLotRepository : ILotRepository
         await _db.Lots
             .AsNoTracking()
             .Where(l => l.AssetId == assetId)
-            .OrderBy(l => l.PurchaseDate) // удобно для FIFO
+            .OrderBy(l => l.PurchaseDate) // convenient for FIFO
             .ToListAsync(ct);
 
     public async Task<IReadOnlyList<Lot>> GetAllAsync(CancellationToken ct = default) =>
@@ -29,7 +24,7 @@ public sealed class EfLotRepository : ILotRepository
 
     public async Task SaveAsync(Lot lot, CancellationToken ct = default)
     {
-        // upsert по Id
+        // upsert by Id
         var exists = await _db.Lots.AsNoTracking().AnyAsync(x => x.Id == lot.Id, ct);
         if (exists) _db.Lots.Update(lot);
         else        _db.Lots.Add(lot);

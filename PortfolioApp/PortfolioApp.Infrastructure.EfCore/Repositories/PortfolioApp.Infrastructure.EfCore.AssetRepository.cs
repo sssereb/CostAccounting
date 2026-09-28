@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using PortfolioApp.Domain;
 using PortfolioApp.Application.Repositories.Interfaces;
@@ -39,7 +34,7 @@ public sealed class EfAssetRepository : IAssetRepository
         var existing = await _db.Assets.FirstOrDefaultAsync(a => a.Ticker == t, ct);
         if (existing is not null) return existing;
 
-        var entity = new Asset(t); // если у Asset другой конструктор — подправь эту строку
+        var entity = new Asset(t);
         _db.Assets.Add(entity);
         await _db.SaveChangesAsync(ct);
         return entity;

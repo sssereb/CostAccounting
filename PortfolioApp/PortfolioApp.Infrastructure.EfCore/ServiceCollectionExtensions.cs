@@ -18,13 +18,12 @@ public static class ServiceCollectionExtensions
     
     public static IServiceCollection AddPortfolioEfCoreSqlite(this IServiceCollection services)
     {
-        var dbPath = DbPathResolver.getAbsoluteDbPath(); // только конфиг
+        var dbPath = DbPathResolver.getAbsoluteDbPath(); // resolved from config only
 
         var cs = new SqliteConnectionStringBuilder { DataSource = dbPath, Cache = SqliteCacheMode.Shared }.ToString();
 
         services.AddDbContext<PortfolioDbContext>(opt => opt.UseSqlite(cs));
 
-        // регистрируем наш мигратор
         services.AddScoped<IDbMigrator, EfDbMigrator>();
 
         return services;

@@ -2,9 +2,7 @@
 using Microsoft.OpenApi.Models;
 using PortfolioApp.Application;
 using PortfolioApp.Application.DTOs;
-using PortfolioApp.Application.Fees;
 using PortfolioApp.Application.Repositories.Interfaces;
-using PortfolioApp.Application.Strategies;
 using PortfolioApp.Domain;
 using PortfolioApp.Infrastructure.EfCore; // <-- AddPortfolioEfCoreSqlite
 
@@ -48,7 +46,7 @@ builder.Services.AddCors(opt =>
     opt.AddPolicy("Frontend", p =>
         p.WithOrigins("http://localhost:5173").AllowAnyHeader().AllowAnyMethod()));
 
-// ── JSON enums как строки
+// ── JSON enums as strings
 builder.Services.ConfigureHttpJsonOptions(opt =>
 {
     opt.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
@@ -59,12 +57,10 @@ app.UseCors("Frontend");
 app.UseSwagger();
 app.UseSwaggerUI();
 
-/* ── demo-сидирование комиссий и MSFT (один раз) ── */
+/* ── Demo fee rules (seeded once) ── */
 using (var scope = app.Services.CreateScope())
 {
     var sp   = scope.ServiceProvider;
-    var repo = sp.GetRequiredService<IAssetRepository>();
-    var svc  = sp.GetRequiredService<TradeService>();
     var prov = sp.GetRequiredService<IFeeRuleProvider>();
 
     if (!prov.GetRules().Any())
@@ -75,18 +71,9 @@ using (var scope = app.Services.CreateScope())
             new FeeRegistration(FeeType.Percent,       0.01m, FeeDirection.Sell)
         });
     }
-
-    // var msft = await repo.GetByTickerAsync("MSFT");
-    // if (msft is null)
-    // {
-    //     msft = await repo.CreateAsync("MSFT");
-    //     await svc.BuyAsync(msft.Id, 100, 20m, new DateTime(2025, 1, 1));
-    //     await svc.BuyAsync(msft.Id, 150, 30m, new DateTime(2025, 2, 1));
-    //     await svc.BuyAsync(msft.Id, 120, 10m, new DateTime(2025, 3, 1));
-    // }
 }
 
-// ───── Endpoints (ВСЕ async) ─────
+// ───── Endpoints ─────
 
 // Fees
 app.MapGet("/fees/get", (IFeeRuleProvider p)
@@ -213,6 +200,6 @@ app.MapGet("/trades/all", async (ITradeRepository tradeRepo, IAssetRepository as
     return Results.Ok(result);
 });
 
-app.UseDefaultFiles(); // index.html, и т.д.
+app.UseDefaultFiles(); // index.html etc.
 app.UseStaticFiles();  // wwwroot
 app.Run("http://localhost:5255");

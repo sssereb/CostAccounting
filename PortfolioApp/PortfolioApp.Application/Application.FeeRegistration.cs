@@ -1,10 +1,9 @@
-using PortfolioApp.Application.Fees;
 using PortfolioApp.Domain;
 
 namespace PortfolioApp.Application;
 
 
 public sealed record FeeRegistration(
-    FeeType       Type,     // ← «какой» калькулятор создавать
-    decimal       Amount,   // ← параметр (фикс $, $/шт, %)
+    FeeType       Type,     // selects the fee calculator
+    decimal       Amount,   // fixed $, $ per share or percent rate
     FeeDirection  Direction);

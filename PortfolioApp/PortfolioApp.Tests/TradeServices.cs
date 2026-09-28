@@ -1,31 +1,16 @@
 // PortfolioApp.Tests/Application/TradeServiceTests.cs
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.Serialization;
-using System.Threading;
-using System.Threading.Tasks;
 using Moq;
 using PortfolioApp.Application;
 using PortfolioApp.Application.Fees;
 using PortfolioApp.Application.Repositories.Interfaces;
 using PortfolioApp.Application.Strategies;
 using PortfolioApp.Domain;
-using Xunit;
 
 namespace PortfolioApp.Tests;
 
 public class TradeServiceTests
 {
-    private static FeeComposite ZeroFeeComposite() => new(
-        new[]
-        {
-            new FeeRegistration(FeeType.FixedPerTrade,  0m, FeeDirection.Buy),
-            new FeeRegistration(FeeType.FixedPerTrade,  0m, FeeDirection.Sell)
-        }
-        .Select(FeeCalculatorFactory.Create)   // → IFeeCalculator
-    );
-
     /* ----------------------------------------------------------------
      * BUY: 
      * --------------------------------------------------------------*/
@@ -54,7 +39,7 @@ public class TradeServiceTests
 
         var feeSvc = new Mock<IFeeService>();
         feeSvc.Setup(f => f.CalcAll(It.IsAny<int>(), It.IsAny<decimal>(), It.IsAny<FeeDirection>()))
-              .Returns(Array.Empty<Fee>());   // комиссии = 0
+              .Returns(Array.Empty<Fee>());   // no fees
 
         var service = new TradeService(
             assets.Object,
@@ -136,7 +121,7 @@ public class TradeServiceTests
 
         var feeSvc = new Mock<IFeeService>();
         feeSvc.Setup(f => f.CalcAll(It.IsAny<int>(), It.IsAny<decimal>(), It.IsAny<FeeDirection>()))
-              .Returns(Array.Empty<Fee>());   // комиссии = 0
+              .Returns(Array.Empty<Fee>());   // no fees
 
         var service = new TradeService(
             Mock.Of<IAssetRepository>(),

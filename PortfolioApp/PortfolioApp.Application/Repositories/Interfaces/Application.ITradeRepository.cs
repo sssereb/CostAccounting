@@ -1,5 +1,4 @@
 ﻿using PortfolioApp.Domain;
-using System.Threading;
 
 namespace PortfolioApp.Application.Repositories.Interfaces;
 

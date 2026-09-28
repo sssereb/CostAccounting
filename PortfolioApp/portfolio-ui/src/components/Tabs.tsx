@@ -20,7 +20,9 @@ function readTabFromLocation(queryKey: string, fallback: string) {
     const hash = window.location.hash.slice(1);
     const [k, v] = hash.split("=");
     if (k === queryKey && v) return decodeURIComponent(v);
-  } catch { }
+  } catch {
+    // malformed URL: fall back to the default tab
+  }
   return fallback;
 }
 
@@ -33,10 +35,11 @@ function writeTabToLocation(queryKey: string, value: string) {
       window.history.replaceState(window.history.state, "", url);
     else
       window.location.hash = `${queryKey}=${encodeURIComponent(value)}`;
-  } catch { }
+  } catch {
+    // keeping the tab in the URL is best effort
+  }
 }
 
-/* тип вкладки */
 type TabItem = { id: string; label: string; content: React.ReactNode | (() => React.ReactNode) };
 
 export default function PortfolioTabs() {

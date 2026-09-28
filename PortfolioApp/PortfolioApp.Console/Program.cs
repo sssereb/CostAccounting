@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using PortfolioApp.Application;
 using PortfolioApp.Application.Repositories.Interfaces;
 using PortfolioApp.Application.Strategies;
@@ -14,7 +13,7 @@ public class Program
         var services = new ServiceCollection();
         
         services
-            .AddPortfolioCore();                 // ваше ядро (FeeService, TradeService и т.д.)
+            .AddPortfolioCore();                 // core services (FeeService, TradeService, etc.)
         
         var storageEnv = Environment.GetEnvironmentVariable("PORTFOLIO_STORAGE") ?? "Sqlite"; // "Sqlite" | "InMemory"
         var useSqlite  = string.Equals(storageEnv, "Sqlite", StringComparison.OrdinalIgnoreCase);
@@ -38,24 +37,23 @@ public class Program
         var lotRepo      = provider.GetRequiredService<ILotRepository>();
         var feeProv      = provider.GetRequiredService<IFeeRuleProvider>();
 
-        // --- demo fee rules (оставил как у тебя) ---
+        // --- demo fee rules ---
         feeProv.SetRules(new[]
         {
             new FeeRegistration(FeeType.FixedPerTrade, 7m,    FeeDirection.Sell),
             new FeeRegistration(FeeType.Percent,       0.01m, FeeDirection.Sell)
         });
 
-        // --- опционально: демо операции (раскомментируй при необходимости) ---
+        // --- optional demo trades (uncomment if needed) ---
         // var asset = await IAssetRepository.GetOrCreateAsync(assetRepo, "MSFT");
         // await tradeService.BuyAsync(asset.Id, 120, 10m, new DateTime(2025, 3, 1));
         // await tradeService.BuyAsync(asset.Id, 100, 20m, new DateTime(2025, 1, 1));
         // await tradeService.BuyAsync(asset.Id, 150, 30m, new DateTime(2025, 2, 1));
 
-        // показать текущие правила
         foreach (var f in feeProv.GetRules())
             Console.WriteLine($"Fee Rules: {f.Direction}, Amount: {f.Amount}, Type: {f.Type}");
 
-        // --- интерактив ---
+        // --- interactive loop ---
         while (true)
         {
             Console.Write("\nCommand (buy/sell/list/exit): ");
@@ -108,7 +106,7 @@ public class Program
                         {
                             Console.WriteLine($"\n{a.Ticker}:");
                             var lots = (await lotRepo.GetForAssetAsync(a.Id))
-                                .OrderBy(l => l.PurchaseDate) // или твое свойство даты покупки
+                                .OrderBy(l => l.PurchaseDate)
                                 .ToList();
 
                             if (!lots.Any())
@@ -137,13 +135,5 @@ public class Program
                 Console.WriteLine($"Error: {ex.Message}");
             }
         }
-    }
-
-    private static string GetDefaultDbPath()
-    {
-        var root = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        var appDir = Path.Combine(root, "PortfolioApp");
-        Directory.CreateDirectory(appDir);
-        return Path.Combine(appDir, "portfolio.db");
     }
 }

@@ -1,11 +1,7 @@
 // PortfolioApp.Console.Tests/Application/FeeCompositeTests.cs
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using PortfolioApp.Application;
 using PortfolioApp.Application.Fees;
 using PortfolioApp.Domain;
-using Xunit;
 
 namespace PortfolioApp.Tests;
 

@@ -1,12 +1,13 @@
 import { http } from "../lib/http";
-import { useDebounce } from "../utils/useDebounce";   // относительный путь из той же папки
+import { useDebounce } from "../utils/useDebounce";
+import type { AxiosError } from "axios";
 // src/hooks/useTrades.ts
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 
 
 
-/* ---------- типы DTO ---------- */
+/* ---------- DTO types ---------- */
 
 export type BuyRequestDto = {
   assetId?: string;
@@ -23,7 +24,7 @@ export type SellRequestDto = {
   date:    string;
 };
 
-/* ---------- хук: получить assetId по тикеру ---------- */
+/* ---------- hook: resolve assetId by ticker ---------- */
 export function useAssetId(ticker: string) {
   const debounced = useDebounce(ticker.trim().toUpperCase(), 400);
 
@@ -33,30 +34,30 @@ export function useAssetId(ticker: string) {
       http.get<string>(`/assets/id/${debounced}`).then(r => r.data),
     enabled: !!debounced,
     retry: (failureCount, error) => {
-      // повторим максимум 1 раз И только если это 5xx
+      // retry at most once, and only on 5xx
       if (failureCount >= 1) return false;
-      const status = (error as any).response?.status;
-      return status >= 500;          // true → попробовать ещё раз
+      const status = (error as AxiosError).response?.status ?? 0;
+      return status >= 500;
     }
   });
 }
 
 
-/* ---------- хук: BUY ---------- */
+/* ---------- hook: BUY ---------- */
 export function useBuy() {
   const qc = useQueryClient();
 
   return useMutation({
     mutationFn: (p: BuyRequestDto) => http.post("/trades/buy", p),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["lots"] });     // ⚡ обновить грид
-      qc.invalidateQueries({ queryKey: ["assets"] });   // заодно список активов
+      qc.invalidateQueries({ queryKey: ["lots"] });     // refresh the lots grid
+      qc.invalidateQueries({ queryKey: ["assets"] });   // and the assets list
     }
   });
 }
 
 
-/* ---------- хук: SELL ---------- */
+/* ---------- hook: SELL ---------- */
 export function useSell() {
   const qc = useQueryClient();
 

@@ -1,43 +1,37 @@
 // PortfolioApp.Infrastructure/Fees/MemoryFeeRuleProvider.cs
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using PortfolioApp.Application;
-using PortfolioApp.Domain;          // FeeDirection
-using PortfolioApp.Application.Fees; // FeeType, FeeRegistration
 
 namespace PortfolioApp.Infrastructure.Fees;
 
 /// <summary>
-/// Простейший провайдер правил комиссий, работающий в памяти.
-/// Поддерживает параллельное чтение и один поток записи.
+/// Simple in-memory fee rule provider.
+/// Supports concurrent readers and a single writer.
 /// </summary>
 public sealed class MemoryFeeRuleProvider : IFeeRuleProvider
 {
     private readonly ReaderWriterLockSlim _rw = new();
     private List<FeeRegistration> _rules;
 
-    /// <param name="initialRules">Стартовый набор правил (может быть пустым).</param>
+    /// <param name="initialRules">Initial rules (may be empty).</param>
     public MemoryFeeRuleProvider(IEnumerable<FeeRegistration> initialRules)
         => _rules = initialRules?.ToList() ?? new();
 
-    /// <summary>Вернуть текущий список правил (копия, чтобы внешние модификации не влияли).</summary>
+    /// <summary>Returns a copy of the current rules so callers cannot modify them.</summary>
     public IReadOnlyCollection<FeeRegistration> GetRules()
     {
         _rw.EnterReadLock();
-        try   { return _rules.ToList(); }          // отдаём копию
+        try   { return _rules.ToList(); }
         finally { _rw.ExitReadLock(); }
     }
 
-    /// <summary>Полностью заменить список правил.</summary>
-    /// <exception cref="InvalidOperationException">Если переданы дубли (Type+Amount+Direction).</exception>
+    /// <summary>Replaces the whole rule list.</summary>
+    /// <exception cref="InvalidOperationException">When duplicate rules (Type+Amount+Direction) are passed.</exception>
     public void SetRules(IEnumerable<FeeRegistration> rules)
     {
         if (rules is null) throw new ArgumentNullException(nameof(rules));
         var fresh = rules.ToList();
 
-        // --- проверка на дубли -------------------------------------------------
+        // --- duplicate check --------------------------------------------------
         var dup = fresh.GroupBy(r => (r.Type, r.Amount, r.Direction))
                        .FirstOrDefault(g => g.Count() > 1);
         if (dup != null)

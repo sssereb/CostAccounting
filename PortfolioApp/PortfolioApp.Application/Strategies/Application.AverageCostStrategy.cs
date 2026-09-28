@@ -4,7 +4,7 @@ public sealed class AverageCostStrategy : CostBasisStrategyBase
 {
     public override CostBasisMethod Method => CostBasisMethod.Average;
 
-    // Для AVG порядок не важен – возвращаем «как есть»
+    // Order does not matter for average cost, keep lots as they are
     protected override IOrderedEnumerable<Lot> OrderLots(IEnumerable<Lot> lots) =>
         lots.OrderBy(l => 0);
 

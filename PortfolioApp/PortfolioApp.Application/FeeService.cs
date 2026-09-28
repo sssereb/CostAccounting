@@ -1,29 +1,19 @@
-// PortfolioApp.Application/Fees/FeeService.cs
-// -------------------------------------------
-// Сервис-фасад: считает все комиссии для сделки, опираясь на
-// актуальный набор правил (FeeRegistration) из IFeeRuleProvider.
-// -------------------------------------------
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using PortfolioApp.Domain;          // Fee, FeeDirection
 
 namespace PortfolioApp.Application.Fees;
 
 /// <summary>
-/// Высоко-уровневый сервис расчёта комиссий.
-/// На каждый вызов формирует набор конкретных калькуляторов
-/// на основании правил (Type + Amount + Direction), хранящихся
-/// в <see cref="IFeeRuleProvider"/>.
+/// High-level fee calculation service.
+/// On every call it builds concrete calculators from the rules
+/// (Type + Amount + Direction) stored in <see cref="IFeeRuleProvider"/>.
 /// </summary>
 ///
 ///
 public interface IFeeService
 {
-    /// <param name="qty">Количество акций / лотов.</param>
-    /// <param name="price">Цена одной акции (или контракта).</param>
-    /// <param name="direction">Buy / Sell (или Both, если нужно).</param>
+    /// <param name="qty">Number of shares.</param>
+    /// <param name="price">Price per share (or contract).</param>
+    /// <param name="direction">Buy / Sell (or Both if needed).</param>
     IReadOnlyList<Fee> CalcAll(int qty, decimal price, FeeDirection direction);
 }
 
@@ -40,7 +30,7 @@ public sealed class FeeService : IFeeService
         if (qty   <= 0) throw new ArgumentOutOfRangeException(nameof(qty));
         if (price <  0) throw new ArgumentOutOfRangeException(nameof(price));
 
-        // 1) берём правила под нужное направление
+        // 1) rules for the requested direction
         var activeRules = _rules.GetRules()
             .Where(r => r.Direction == direction || r.Direction == FeeDirection.Both)
             .ToList();
@@ -48,12 +38,12 @@ public sealed class FeeService : IFeeService
         if (activeRules.Count == 0)
             return Array.Empty<Fee>();
 
-        // 2) создаём калькуляторы «на лету»
+        // 2) build calculators on the fly
         var calculators = activeRules
             .Select(FeeCalculatorFactory.Create)  // FeeRegistration → IFeeCalculator
             .ToArray();
 
-        // 3) складываем комиссии
+        // 3) sum up the fees
         var composite = new FeeComposite(calculators);
         return composite.CalcAll(qty, price, direction);
     }

@@ -2,6 +2,6 @@
 import axios from "axios";
 
 export const http = axios.create({
-  baseURL: "/api",                      // ← прокси-префикс, см. vite.config.ts
+  baseURL: "/api",                      // proxy prefix, see vite.config.ts
   headers: { "Content-Type": "application/json" }
 });
