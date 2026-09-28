@@ -1,4 +1,5 @@
 ﻿using PortfolioApp.Application.Fees;
+using PortfolioApp.Application.Persistence;
 using PortfolioApp.Application.Repositories.Interfaces;
 using PortfolioApp.Application.Strategies;
 using PortfolioApp.Domain;
@@ -12,15 +13,17 @@ public sealed class TradeService
     private readonly ILotRepository _lots;
     private readonly ICostBasisFactory _factory;
     private readonly IFeeService _fees;
+    private readonly IUnitOfWork _uow;
 
     public TradeService(
         IAssetRepository assets,
         ITradeRepository trades,
         ILotRepository lots,
         ICostBasisFactory factory,
-        IFeeService fees)
+        IFeeService fees,
+        IUnitOfWork uow)
     {
-        _assets = assets; _trades = trades; _lots = lots; _factory = factory; _fees = fees;
+        _assets = assets; _trades = trades; _lots = lots; _factory = factory; _fees = fees; _uow = uow;
     }
 
     public async Task BuyAsync(Guid assetId, int qty, decimal price, DateTime date, CancellationToken ct = default)
@@ -37,8 +40,11 @@ public sealed class TradeService
         var lot = new Lot(assetId, date, qty, rawUnitCost: price, unitCostIncludingFees: pricePerShare);
         var trade = new Trade(Guid.NewGuid(), assetId, date, qty, price, 0,0, fees);
 
-        await _trades.AddAsync(trade, ct);
-        await _lots.SaveAsync(lot, ct);
+        await _uow.ExecuteInTransactionAsync(async token =>
+        {
+            await _trades.AddAsync(trade, token);
+            await _lots.SaveAsync(lot, token);
+        }, ct);
     }
 
     public async Task<SaleResult> SellAsync(Guid assetId, int qty, decimal price, CostBasisMethod method, DateTime date, CancellationToken ct = default)
@@ -54,10 +60,15 @@ public sealed class TradeService
         var fees = _fees.CalcAll(qty, price, FeeDirection.Sell).ToList();
         var totalFee = fees.Sum(f => f.Amount);
 
-        foreach (var l in lots)
-            await _lots.SaveAsync(l, ct);
+        var trade = new Trade(Guid.NewGuid(), assetId, date, -qty, price, res.GrossProfit, res.GrossProfit - totalFee, fees);
 
-        await _trades.AddAsync(new Trade(Guid.NewGuid(), assetId, date, -qty, price, res.GrossProfit, res.GrossProfit - totalFee, fees), ct);
+        // Lots are read without a transaction; the lot version check at write time detects concurrent sales.
+        await _uow.ExecuteInTransactionAsync(async token =>
+        {
+            foreach (var l in lots)
+                await _lots.SaveAsync(l, token);
+            await _trades.AddAsync(trade, token);
+        }, ct);
 
         return res with { NetProfit = res.GrossProfit - totalFee };
     }

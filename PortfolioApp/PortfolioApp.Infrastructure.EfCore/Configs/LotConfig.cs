@@ -18,5 +18,6 @@ public sealed class LotConfig : IEntityTypeConfiguration<Lot>
         e.Property(x => x.QtyRemain).IsRequired();
         e.Property(x => x.RawUnitCost).IsRequired(); 
         e.Property(x => x.UnitCost).IsRequired(); 
+        e.Property(x => x.Version).IsRequired().IsConcurrencyToken();
     }
 }

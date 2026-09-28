@@ -28,6 +28,7 @@
   <ItemGroup>
     <ProjectReference Include="..\PortfolioApp.Application\PortfolioApp.Application.csproj" />
     <ProjectReference Include="..\PortfolioApp.Domain\PortfolioApp.Domain.csproj" />
+    <ProjectReference Include="..\PortfolioApp.Infrastructure.EfCore\PortfolioApp.Infrastructure.EfCore.csproj" />
   </ItemGroup>
 
 </Project>

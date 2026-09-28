@@ -11,6 +11,9 @@ public class Lot
     
     public decimal RawUnitCost { get; init; } 
     public decimal UnitCost { get; init; } 
+
+    /// <summary>Optimistic concurrency token, incremented on every update.</summary>
+    public int Version { get; private set; }
     protected Lot() { }
     public Lot(Guid assetId,
         DateTime dt,

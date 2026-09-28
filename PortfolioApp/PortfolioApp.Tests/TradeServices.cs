@@ -3,6 +3,7 @@ using System.Runtime.Serialization;
 using Moq;
 using PortfolioApp.Application;
 using PortfolioApp.Application.Fees;
+using PortfolioApp.Application.Repositories.InMemory;
 using PortfolioApp.Application.Repositories.Interfaces;
 using PortfolioApp.Application.Strategies;
 using PortfolioApp.Domain;
@@ -46,7 +47,8 @@ public class TradeServiceTests
             tradeRepo.Object,
             lotsRepo.Object,
             Mock.Of<ICostBasisFactory>(),
-            feeSvc.Object);
+            feeSvc.Object,
+            new NoOpUnitOfWork());
 
         await service.BuyAsync(assetId, qty, price, date);
         assets.Verify(r => r.GetAsync(assetId, It.IsAny<CancellationToken>()), Times.Once);
@@ -79,7 +81,8 @@ public class TradeServiceTests
             Mock.Of<ITradeRepository>(),
             Mock.Of<ILotRepository>(),
             Mock.Of<ICostBasisFactory>(),
-            Mock.Of<IFeeService>());
+            Mock.Of<IFeeService>(),
+            new NoOpUnitOfWork());
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             service.BuyAsync(Guid.NewGuid(), 1, 1m, DateTime.Today));
@@ -128,7 +131,8 @@ public class TradeServiceTests
             tradeRepo.Object,
             lotsRepo.Object,
             factory.Object,
-            feeSvc.Object);
+            feeSvc.Object,
+            new NoOpUnitOfWork());
 
         var res = await service.SellAsync(assetId, 50, 100m, CostBasisMethod.FIFO, DateTime.Today);
         Assert.Equal(stub.GrossProfit, res.NetProfit);  

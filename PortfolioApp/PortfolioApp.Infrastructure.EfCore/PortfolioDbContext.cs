@@ -21,4 +21,22 @@ public class PortfolioDbContext : DbContext
 
         base.OnModelCreating(b);
     }
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        BumpLotVersions();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken ct = default)
+    {
+        BumpLotVersions();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, ct);
+    }
+
+    private void BumpLotVersions()
+    {
+        foreach (var entry in ChangeTracker.Entries<Lot>().Where(e => e.State == EntityState.Modified))
+            entry.Property(l => l.Version).CurrentValue += 1;
+    }
 }

@@ -1,6 +1,7 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using PortfolioApp.Application.Persistence;
 using PortfolioApp.Application.Repositories.Interfaces;
 using PortfolioApp.Infrastructure.EfCore.Repositories;
 
@@ -13,6 +14,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAssetRepository, EfAssetRepository>();
         services.AddScoped<ILotRepository,   EfLotRepository>();
         services.AddScoped<ITradeRepository, EfTradeRepository>();
+        services.AddScoped<IUnitOfWork, EfUnitOfWork>();
         return services;
     }
     

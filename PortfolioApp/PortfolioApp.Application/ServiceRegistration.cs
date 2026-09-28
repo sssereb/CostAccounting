@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using PortfolioApp.Application.Fees;
+using PortfolioApp.Application.Persistence;
 using PortfolioApp.Application.Repositories.InMemory;
 using PortfolioApp.Application.Repositories.Interfaces;
 using PortfolioApp.Application.Strategies;
@@ -11,9 +12,10 @@ public static class PortfolioServices
 {
     public static IServiceCollection AddPortfolioRepositoriesInMemory(this IServiceCollection services)
     {
-        services.AddScoped<IAssetRepository, InMemoryAssetRepository>();
-        services.AddScoped<ILotRepository,   InMemoryLotRepository>();
-        services.AddScoped<ITradeRepository, InMemoryTradeRepository>();
+        services.AddSingleton<IAssetRepository, InMemoryAssetRepository>();
+        services.AddSingleton<ILotRepository,   InMemoryLotRepository>();
+        services.AddSingleton<ITradeRepository, InMemoryTradeRepository>();
+        services.AddSingleton<IUnitOfWork,      NoOpUnitOfWork>();
         return services;
     }
     
