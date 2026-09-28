@@ -13,7 +13,8 @@ namespace PortfolioApp.Application.DTOs
         CostBasisMethod Method,
         DateTime Date);
 
-    public record AssetDto(string Ticker, int QtyRemaining, decimal LastPrice);
+    /// <param name="LastUnitCost">Unit cost of the most recently bought lot.</param>
+    public record AssetDto(string Ticker, int QtyRemaining, decimal LastUnitCost);
     public record LotDto(
         Guid Id,
         string Ticker,

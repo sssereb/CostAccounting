@@ -17,7 +17,7 @@ public sealed class FixedPerTrade : IFeeCalculator
 public sealed class FixedPerShare : IFeeCalculator
 {
     private readonly decimal _perShare;     // e.g. $0.005 per share
-    public FixedPerShare(decimal cents) => _perShare = cents;
+    public FixedPerShare(decimal perShare) => _perShare = perShare;
     public Fee Calc(int qty, decimal __) => new(FeeType.FixedPerShare, qty * _perShare);
 }
 
@@ -35,6 +35,6 @@ public sealed class FeeComposite
     public FeeComposite(IEnumerable<IFeeCalculator> calculators) =>
         _calcs = calculators;
 
-    public IReadOnlyList<Fee> CalcAll(int qty, decimal price, FeeDirection dir) =>
+    public IReadOnlyList<Fee> CalcAll(int qty, decimal price) =>
         _calcs.Select(c => c.Calc(qty, price)).ToList();
 }

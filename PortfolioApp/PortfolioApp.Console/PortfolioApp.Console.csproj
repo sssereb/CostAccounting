@@ -9,18 +9,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="PortfolioApp.Web\**" />
-    <EmbeddedResource Remove="PortfolioApp.Web\**" />
-    <None Remove="PortfolioApp.Web\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.8" />
-    <PackageReference Include="Microsoft.Graph" Version="5.84.0" />
-	<ProjectReference Include="..\PortfolioApp.Application\PortfolioApp.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\PortfolioApp.Application\PortfolioApp.Application.csproj" />
     <ProjectReference Include="..\PortfolioApp.Infrastructure.EfCore\PortfolioApp.Infrastructure.EfCore.csproj" />
   </ItemGroup>
 

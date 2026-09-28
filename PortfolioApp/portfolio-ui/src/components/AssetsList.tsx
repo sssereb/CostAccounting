@@ -32,8 +32,8 @@ export function AssetsList() {
       flex: 1,
     },
 
-    { field: 'lastPrice', 
-      headerName: 'Last Price',
+    { field: 'lastUnitCost',
+      headerName: 'Last lot unit cost',
       flex: 1,
     }
   ];
@@ -43,7 +43,7 @@ export function AssetsList() {
       <AppDataGrid
         rows={rows}
         columns={columns}
-        getRowId={(row) => `${row.ticker}-${row.qtyRemaining}-${row.lastPrice}` }
+        getRowId={(row) => row.ticker}
       />
     </div>
   );

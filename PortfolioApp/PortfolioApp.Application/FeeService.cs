@@ -45,6 +45,6 @@ public sealed class FeeService : IFeeService
 
         // 3) one fee per calculator
         var composite = new FeeComposite(calculators);
-        return composite.CalcAll(qty, price, direction);
+        return composite.CalcAll(qty, price);
     }
 }

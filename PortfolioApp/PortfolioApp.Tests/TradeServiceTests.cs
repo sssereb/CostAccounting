@@ -1,4 +1,3 @@
-using System.Runtime.Serialization;
 using Moq;
 using PortfolioApp.Application;
 using PortfolioApp.Application.Fees;
@@ -20,11 +19,8 @@ public class TradeServiceTests
         var date = new DateTime(2025, 7, 20);
 
         var assets = new Mock<IAssetRepository>();
-        
-        var dummyAsset = (Asset)FormatterServices.GetUninitializedObject(typeof(Asset));
-        
         assets.Setup(r => r.GetAsync(assetId, It.IsAny<CancellationToken>()))
-              .ReturnsAsync(dummyAsset);
+              .ReturnsAsync(new Asset("MSFT"));
 
         Lot? storedLot = null;
         var lotsRepo = new Mock<ILotRepository>();

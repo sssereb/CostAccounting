@@ -286,7 +286,7 @@
     "schemas": {
       "AssetDto": {
         "required": [
-          "lastPrice",
+          "lastUnitCost",
           "qtyRemaining",
           "ticker"
         ],
@@ -299,7 +299,7 @@
             "type": "integer",
             "format": "int32"
           },
-          "lastPrice": {
+          "lastUnitCost": {
             "type": "number",
             "format": "double"
           }

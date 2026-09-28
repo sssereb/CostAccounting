@@ -19,8 +19,6 @@ public class Program
         var storageEnv = Environment.GetEnvironmentVariable("PORTFOLIO_STORAGE") ?? "Sqlite"; // "Sqlite" | "InMemory"
         var useSqlite  = string.Equals(storageEnv, "Sqlite", StringComparison.OrdinalIgnoreCase);
 
-        Console.WriteLine(useSqlite);
-        
         if (useSqlite)
         {
             services.AddPortfolioEfCoreSqlite(DbPathResolver.Resolve(Environment.GetEnvironmentVariable("DB_PATH")));
@@ -45,11 +43,6 @@ public class Program
             new FeeRegistration(FeeType.Percent,       0.01m, FeeDirection.Sell)
         });
 
-        // --- optional demo trades (uncomment if needed) ---
-        // var asset = await IAssetRepository.GetOrCreateAsync(assetRepo, "MSFT");
-        // await tradeService.BuyAsync(asset.Id, 120, 10m, new DateTime(2025, 3, 1));
-        // await tradeService.BuyAsync(asset.Id, 100, 20m, new DateTime(2025, 1, 1));
-        // await tradeService.BuyAsync(asset.Id, 150, 30m, new DateTime(2025, 2, 1));
 
         foreach (var f in feeProv.GetRules())
             Console.WriteLine($"Fee Rules: {f.Direction}, Amount: {f.Amount}, Type: {f.Type}");

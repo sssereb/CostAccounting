@@ -15,13 +15,6 @@ public sealed class EfTradeRepository : ITradeRepository
         await _db.SaveChangesAsync(ct);
     }
 
-    public async Task<IReadOnlyList<Trade>> GetForAssetAsync(Guid assetId, CancellationToken ct = default) =>
-        await _db.Trades
-            .AsNoTracking()
-            .Where(t => t.AssetId == assetId)
-            .OrderBy(t => t.Date)
-            .ToListAsync(ct);
-
     public async Task<IReadOnlyList<Trade>> GetAllAsync(CancellationToken ct = default) =>
         await _db.Trades
             .AsNoTracking()

@@ -59,21 +59,12 @@ app.UseCors("Frontend");
 app.UseSwagger();
 app.UseSwaggerUI();
 
-// Demo fee rules
-using (var scope = app.Services.CreateScope())
+// Demo fee rules; the provider keeps them in memory only
+app.Services.GetRequiredService<IFeeRuleProvider>().SetRules(new[]
 {
-    var sp   = scope.ServiceProvider;
-    var prov = sp.GetRequiredService<IFeeRuleProvider>();
-
-    if (!prov.GetRules().Any())
-    {
-        prov.SetRules(new[]
-        {
-            new FeeRegistration(FeeType.FixedPerTrade, 7m,    FeeDirection.Sell),
-            new FeeRegistration(FeeType.Percent,       0.01m, FeeDirection.Sell)
-        });
-    }
-}
+    new FeeRegistration(FeeType.FixedPerTrade, 7m,    FeeDirection.Sell),
+    new FeeRegistration(FeeType.Percent,       0.01m, FeeDirection.Sell)
+});
 
 // Endpoints
 // Under /api in every environment, so the UI calls the same paths via the Vite proxy and when served from wwwroot.

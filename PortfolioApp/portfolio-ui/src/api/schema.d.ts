@@ -399,7 +399,7 @@ export interface components {
             /** Format: int32 */
             qtyRemaining: number;
             /** Format: double */
-            lastPrice: number;
+            lastUnitCost: number;
         };
         BuyRequestDto: {
             /** Format: uuid */
