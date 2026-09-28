@@ -5,7 +5,7 @@
     "version": "v1"
   },
   "paths": {
-    "/fees/get": {
+    "/api/fees/get": {
       "get": {
         "tags": [
           "PortfolioApp.Web"
@@ -27,7 +27,7 @@
         }
       }
     },
-    "/fees/save": {
+    "/api/fees/save": {
       "post": {
         "tags": [
           "PortfolioApp.Web"
@@ -62,7 +62,7 @@
         }
       }
     },
-    "/fees/delete": {
+    "/api/fees/delete": {
       "delete": {
         "tags": [
           "PortfolioApp.Web"
@@ -74,7 +74,7 @@
         }
       }
     },
-    "/assets/id/{ticker}": {
+    "/api/assets/id/{ticker}": {
       "get": {
         "tags": [
           "PortfolioApp.Web"
@@ -114,7 +114,7 @@
         }
       }
     },
-    "/assets": {
+    "/api/assets": {
       "get": {
         "tags": [
           "PortfolioApp.Web"
@@ -136,7 +136,7 @@
         }
       }
     },
-    "/trades/buy": {
+    "/api/trades/buy": {
       "post": {
         "tags": [
           "PortfolioApp.Web"
@@ -164,11 +164,21 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           }
         }
       }
     },
-    "/trades/sell": {
+    "/api/trades/sell": {
       "post": {
         "tags": [
           "PortfolioApp.Web"
@@ -227,7 +237,7 @@
         }
       }
     },
-    "/lots": {
+    "/api/lots": {
       "get": {
         "tags": [
           "PortfolioApp.Web"
@@ -249,7 +259,7 @@
         }
       }
     },
-    "/trades/all": {
+    "/api/trades/all": {
       "get": {
         "tags": [
           "PortfolioApp.Web"

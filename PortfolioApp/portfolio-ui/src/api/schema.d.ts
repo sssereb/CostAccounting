@@ -4,7 +4,7 @@
  */
 
 export interface paths {
-    "/fees/get": {
+    "/api/fees/get": {
         parameters: {
             query?: never;
             header?: never;
@@ -39,7 +39,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/fees/save": {
+    "/api/fees/save": {
         parameters: {
             query?: never;
             header?: never;
@@ -85,7 +85,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/fees/delete": {
+    "/api/fees/delete": {
         parameters: {
             query?: never;
             header?: never;
@@ -118,7 +118,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/assets/id/{ticker}": {
+    "/api/assets/id/{ticker}": {
         parameters: {
             query?: never;
             header?: never;
@@ -164,7 +164,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/assets": {
+    "/api/assets": {
         parameters: {
             query?: never;
             header?: never;
@@ -199,7 +199,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/trades/buy": {
+    "/api/trades/buy": {
         parameters: {
             query?: never;
             header?: never;
@@ -237,6 +237,15 @@ export interface paths {
                         "application/problem+json": components["schemas"]["ProblemDetails"];
                     };
                 };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
             };
         };
         delete?: never;
@@ -245,7 +254,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/trades/sell": {
+    "/api/trades/sell": {
         parameters: {
             query?: never;
             header?: never;
@@ -311,7 +320,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/lots": {
+    "/api/lots": {
         parameters: {
             query?: never;
             header?: never;
@@ -346,7 +355,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/trades/all": {
+    "/api/trades/all": {
         parameters: {
             query?: never;
             header?: never;

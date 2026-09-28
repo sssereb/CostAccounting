@@ -28,29 +28,28 @@ public sealed class TradeService
 
     public async Task BuyAsync(Guid assetId, int qty, decimal price, DateTime date, CancellationToken ct = default)
     {
-        if (qty <= 0) throw new ArgumentOutOfRangeException(nameof(qty));
-        if (price <= 0) throw new ArgumentOutOfRangeException(nameof(price));
+        EnsurePositive(qty, price);
+        await EnsureAssetExistsAsync(assetId, ct);
 
-        var asset = await _assets.GetAsync(assetId, ct) ?? throw new InvalidOperationException("Asset not found");
+        await _uow.ExecuteInTransactionAsync(token => RecordBuyAsync(assetId, qty, price, date, token), ct);
+    }
 
-        var fees = _fees.CalcAll(qty, price, FeeDirection.Buy).ToList();
-        var totalFee = fees.Sum(f => f.Amount);
-        var pricePerShare = price + totalFee / qty;
-
-        var lot = new Lot(assetId, date, qty, rawUnitCost: price, unitCostIncludingFees: pricePerShare);
-        var trade = new Trade(Guid.NewGuid(), assetId, date, qty, price, 0,0, fees);
+    /// <summary>Creates the asset if the ticker is new, in the same transaction as the buy.</summary>
+    public async Task BuyByTickerAsync(string ticker, int qty, decimal price, DateTime date, CancellationToken ct = default)
+    {
+        EnsurePositive(qty, price);
 
         await _uow.ExecuteInTransactionAsync(async token =>
         {
-            await _trades.AddAsync(trade, token);
-            await _lots.SaveAsync(lot, token);
+            var asset = await IAssetRepository.GetOrCreateAsync(_assets, ticker, token);
+            await RecordBuyAsync(asset.Id, qty, price, date, token);
         }, ct);
     }
 
     public async Task<SaleResult> SellAsync(Guid assetId, int qty, decimal price, CostBasisMethod method, DateTime date, CancellationToken ct = default)
     {
-        if (qty <= 0) throw new ArgumentOutOfRangeException(nameof(qty));
-        if (price <= 0) throw new ArgumentOutOfRangeException(nameof(price));
+        EnsurePositive(qty, price);
+        await EnsureAssetExistsAsync(assetId, ct);
 
         var lots = (await _lots.GetForAssetAsync(assetId, ct)).ToList();
         if (lots.Sum(l => l.QtyRemain) < qty) throw new InvalidOperationException("Not enough shares to sell.");
@@ -71,6 +70,30 @@ public sealed class TradeService
         }, ct);
 
         return res;
+    }
+
+    private async Task RecordBuyAsync(Guid assetId, int qty, decimal price, DateTime date, CancellationToken ct)
+    {
+        var fees = _fees.CalcAll(qty, price, FeeDirection.Buy).ToList();
+        var totalFee = fees.Sum(f => f.Amount);
+
+        var lot = new Lot(assetId, date, qty, rawUnitCost: price, unitCostIncludingFees: price + totalFee / qty);
+        var trade = new Trade(Guid.NewGuid(), assetId, date, qty, price, 0, 0, fees);
+
+        await _trades.AddAsync(trade, ct);
+        await _lots.SaveAsync(lot, ct);
+    }
+
+    private async Task EnsureAssetExistsAsync(Guid assetId, CancellationToken ct)
+    {
+        if (await _assets.GetAsync(assetId, ct) is null)
+            throw new KeyNotFoundException($"Asset {assetId} not found.");
+    }
+
+    private static void EnsurePositive(int qty, decimal price)
+    {
+        if (qty <= 0) throw new ArgumentOutOfRangeException(nameof(qty), qty, "Quantity must be positive.");
+        if (price <= 0) throw new ArgumentOutOfRangeException(nameof(price), price, "Price must be positive.");
     }
 
     public async Task<decimal> GetRemainingCostPerShareAsync(Guid assetId, CancellationToken ct = default)

@@ -19,13 +19,13 @@ public class TradingEndpointsTests : IClassFixture<ApiFactory>
     {
         await BuyAsync("BUY1", 100, 10m, "2025-01-01");
 
-        var assets = await HttpAssert.OkAsync<List<AssetDto>>(await _client.GetAsync("/assets"));
+        var assets = await HttpAssert.OkAsync<List<AssetDto>>(await _client.GetAsync("/api/assets"));
         Assert.Contains(new AssetDto("BUY1", 100, 10m), assets);
 
-        var id = await HttpAssert.OkAsync<Guid>(await _client.GetAsync("/assets/id/BUY1"));
+        var id = await HttpAssert.OkAsync<Guid>(await _client.GetAsync("/api/assets/id/BUY1"));
         Assert.NotEqual(Guid.Empty, id);
 
-        var lots = await HttpAssert.OkAsync<List<LotDto>>(await _client.GetAsync("/lots"));
+        var lots = await HttpAssert.OkAsync<List<LotDto>>(await _client.GetAsync("/api/lots"));
         var lot = Assert.Single(lots, l => l.Ticker == "BUY1");
         Assert.Equal((100, 100, 10m), (lot.QtyInitial, lot.QtyRemain, lot.UnitCost));
         Assert.NotEqual(Guid.Empty, lot.Id);
@@ -33,13 +33,34 @@ public class TradingEndpointsTests : IClassFixture<ApiFactory>
 
     [Fact(DisplayName = "GET /assets/id/{ticker} returns 404 for an unknown ticker")]
     public async Task AssetId_Unknown_Returns404()
-        => await HttpAssert.StatusAsync(HttpStatusCode.NotFound, await _client.GetAsync("/assets/id/NOPE"));
+        => await HttpAssert.StatusAsync(HttpStatusCode.NotFound, await _client.GetAsync("/api/assets/id/NOPE"));
 
     [Fact(DisplayName = "POST /trades/buy without ticker or assetId returns 400")]
     public async Task Buy_WithoutTicker_Returns400()
     {
-        var res = await _client.PostAsJsonAsync("/trades/buy", new { qty = 1, price = 1m, date = "2025-01-01T00:00:00" });
+        var res = await _client.PostAsJsonAsync("/api/trades/buy", new { qty = 1, price = 1m, date = "2025-01-01T00:00:00" });
         await HttpAssert.StatusAsync(HttpStatusCode.BadRequest, res);
+    }
+
+    [Fact(DisplayName = "POST /trades/buy that fails validation does not create the asset")]
+    public async Task Buy_Invalid_DoesNotCreateAsset()
+    {
+        var res = await _client.PostAsJsonAsync("/api/trades/buy", new { ticker = "ORPHAN", qty = 0, price = 1m, date = "2025-01-01T00:00:00" });
+
+        await HttpAssert.StatusAsync(HttpStatusCode.BadRequest, res);
+        await HttpAssert.StatusAsync(HttpStatusCode.NotFound, await _client.GetAsync("/api/assets/id/ORPHAN"));
+    }
+
+    [Fact(DisplayName = "POST /trades/buy and /trades/sell with an unknown assetId return 404")]
+    public async Task UnknownAssetId_Returns404()
+    {
+        var assetId = Guid.NewGuid();
+
+        var buy = await _client.PostAsJsonAsync("/api/trades/buy", new { assetId, qty = 1, price = 1m, date = "2025-01-01T00:00:00" });
+        var sell = await _client.PostAsJsonAsync("/api/trades/sell", new { assetId, qty = 1, price = 1m, method = "FIFO", date = "2025-01-01T00:00:00" });
+
+        await HttpAssert.StatusAsync(HttpStatusCode.NotFound, buy);
+        await HttpAssert.StatusAsync(HttpStatusCode.NotFound, sell);
     }
 
     [Fact(DisplayName = "POST /trades/sell FIFO returns gross and net profit and records the trade")]
@@ -53,7 +74,7 @@ public class TradingEndpointsTests : IClassFixture<ApiFactory>
         Assert.Equal(200m, sale.GrossProfit);           // 40 * (15 - 10)
         Assert.Equal(187m, sale.NetProfit);             // 200 - (7 + 1% of 600)
 
-        var trades = await HttpAssert.OkAsync<List<TradeDto>>(await _client.GetAsync("/trades/all"));
+        var trades = await HttpAssert.OkAsync<List<TradeDto>>(await _client.GetAsync("/api/trades/all"));
         var sell = Assert.Single(trades, t => t.Ticker == "SELL1" && t.Quantity < 0);
         Assert.Equal((-40, 200m, 187m), (sell.Quantity, sell.ProfitGross, sell.ProfitNet));
         Assert.Contains(trades, t => t.Ticker == "SELL1" && t.Quantity == 100);
@@ -86,7 +107,7 @@ public class TradingEndpointsTests : IClassFixture<ApiFactory>
 
         await HttpAssert.StatusAsync(HttpStatusCode.Conflict, await SellAsync("OVER1", 11, 12m, "FIFO"));
 
-        var lots = await HttpAssert.OkAsync<List<LotDto>>(await _client.GetAsync("/lots"));
+        var lots = await HttpAssert.OkAsync<List<LotDto>>(await _client.GetAsync("/api/lots"));
         Assert.Equal(10, Assert.Single(lots, l => l.Ticker == "OVER1").QtyRemain);
     }
 
@@ -97,17 +118,18 @@ public class TradingEndpointsTests : IClassFixture<ApiFactory>
         var committed = JsonNode.Parse(await File.ReadAllTextAsync(FindSnapshot()));
 
         Assert.True(JsonNode.DeepEquals(live, committed),
-            "The API contract changed. Run the backend, then in portfolio-ui: npm run openapi:pull && npm run gen:api");
+            "The API contract changed. Start the backend with `dotnet run --project PortfolioApp/PortfolioApp.Web -p:SkipFrontendBuild=true`, "
+            + "then in portfolio-ui run `npm run openapi:pull && npm run gen:api`.");
     }
 
     private async Task BuyAsync(string ticker, int qty, decimal price, string date)
     {
-        var res = await _client.PostAsJsonAsync("/trades/buy", new { ticker, qty, price, date = $"{date}T00:00:00" });
+        var res = await _client.PostAsJsonAsync("/api/trades/buy", new { ticker, qty, price, date = $"{date}T00:00:00" });
         await HttpAssert.StatusAsync(HttpStatusCode.OK, res);
     }
 
     private Task<HttpResponseMessage> SellAsync(string ticker, int qty, decimal price, string method)
-        => _client.PostAsJsonAsync("/trades/sell", new { ticker, qty, price, method, date = "2025-02-01T00:00:00" });
+        => _client.PostAsJsonAsync("/api/trades/sell", new { ticker, qty, price, method, date = "2025-02-01T00:00:00" });
 
     private static string FindSnapshot()
     {

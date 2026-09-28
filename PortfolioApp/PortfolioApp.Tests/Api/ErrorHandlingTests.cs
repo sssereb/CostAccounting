@@ -23,7 +23,7 @@ public class ErrorHandlingTests
             .WithWebHostBuilder(b => b.ConfigureTestServices(s => s.AddScoped(_ => trades.Object)))
             .CreateClient();
 
-        var res = await client.GetAsync("/trades/all");
+        var res = await client.GetAsync("/api/trades/all");
 
         await HttpAssert.StatusAsync(HttpStatusCode.InternalServerError, res);
         Assert.Equal("application/problem+json", res.Content.Headers.ContentType?.MediaType);
@@ -37,9 +37,9 @@ public class ErrorHandlingTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        await client.PostAsJsonAsync("/trades/buy", new { ticker = "ERR1", qty = 1, price = 1m, date = "2025-01-01T00:00:00" });
+        await client.PostAsJsonAsync("/api/trades/buy", new { ticker = "ERR1", qty = 1, price = 1m, date = "2025-01-01T00:00:00" });
 
-        var res = await client.PostAsJsonAsync("/trades/sell",
+        var res = await client.PostAsJsonAsync("/api/trades/sell",
             new { ticker = "ERR1", qty = 2, price = 1m, method = "FIFO", date = "2025-01-02T00:00:00" });
 
         await HttpAssert.StatusAsync(HttpStatusCode.Conflict, res);
@@ -54,7 +54,7 @@ public class ErrorHandlingTests
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
 
-        var res = await client.PostAsJsonAsync("/trades/buy", new { ticker = "ERR2", qty = 0, price = 1m, date = "2025-01-01T00:00:00" });
+        var res = await client.PostAsJsonAsync("/api/trades/buy", new { ticker = "ERR2", qty = 0, price = 1m, date = "2025-01-01T00:00:00" });
 
         await HttpAssert.StatusAsync(HttpStatusCode.BadRequest, res);
         Assert.Equal(400, (await ReadProblem(res)).Status);

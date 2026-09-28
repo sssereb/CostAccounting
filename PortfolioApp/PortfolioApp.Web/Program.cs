@@ -76,12 +76,14 @@ using (var scope = app.Services.CreateScope())
 }
 
 // ───── Endpoints ─────
+// Under /api in every environment, so the UI calls the same paths via the Vite proxy and when served from wwwroot.
+var api = app.MapGroup("/api");
 
 // Fees
-app.MapGet("/fees/get", (IFeeRuleProvider p) =>
+api.MapGet("/fees/get", (IFeeRuleProvider p) =>
     TypedResults.Ok(p.GetRules().Select(r => r.ToDto()).ToList()));
 
-app.MapPost("/fees/save", Results<NoContent, ProblemHttpResult> (IFeeRuleProvider prov, [FromBody] IEnumerable<FeeRuleDto> body) =>
+api.MapPost("/fees/save", Results<NoContent, ProblemHttpResult> (IFeeRuleProvider prov, [FromBody] IEnumerable<FeeRuleDto> body) =>
 {
     if (body.Any(r => !Enum.IsDefined(typeof(FeeType), r.Type)))
         return Invalid("Unknown fee type.");
@@ -93,14 +95,14 @@ app.MapPost("/fees/save", Results<NoContent, ProblemHttpResult> (IFeeRuleProvide
 })
 .ProducesProblem(StatusCodes.Status400BadRequest);
 
-app.MapDelete("/fees/delete", (IFeeRuleProvider p) =>
+api.MapDelete("/fees/delete", (IFeeRuleProvider p) =>
 {
     p.SetRules(Array.Empty<FeeRegistration>());
     return TypedResults.NoContent();
 });
 
 // Assets
-app.MapGet("/assets/id/{ticker}", async Task<Results<Ok<Guid>, ProblemHttpResult>> (string ticker, IAssetRepository repo) =>
+api.MapGet("/assets/id/{ticker}", async Task<Results<Ok<Guid>, ProblemHttpResult>> (string ticker, IAssetRepository repo) =>
 {
     var asset = await repo.GetByTickerAsync(ticker);
     return asset is null
@@ -109,7 +111,7 @@ app.MapGet("/assets/id/{ticker}", async Task<Results<Ok<Guid>, ProblemHttpResult
 })
 .ProducesProblem(StatusCodes.Status404NotFound);
 
-app.MapGet("/assets", async (IAssetRepository assetrepo, ILotRepository lotrepo)
+api.MapGet("/assets", async (IAssetRepository assetrepo, ILotRepository lotrepo)
     =>
 {
     var assets = await assetrepo.GetAllAsync();
@@ -131,19 +133,22 @@ app.MapGet("/assets", async (IAssetRepository assetrepo, ILotRepository lotrepo)
 });
 
 // BUY
-app.MapPost("/trades/buy", async Task<Results<Ok, ProblemHttpResult>> (BuyRequestDto dto, IAssetRepository repo, TradeService svc) =>
+api.MapPost("/trades/buy", async Task<Results<Ok, ProblemHttpResult>> (BuyRequestDto dto, TradeService svc) =>
 {
-    if (dto.AssetId is null && string.IsNullOrWhiteSpace(dto.Ticker))
+    if (dto.AssetId is { } assetId)
+        await svc.BuyAsync(assetId, dto.Qty, dto.Price, dto.Date);
+    else if (!string.IsNullOrWhiteSpace(dto.Ticker))
+        await svc.BuyByTickerAsync(dto.Ticker, dto.Qty, dto.Price, dto.Date);
+    else
         return Invalid("assetId or ticker required");
 
-    var assetId = dto.AssetId ?? (await IAssetRepository.GetOrCreateAsync(repo, dto.Ticker!)).Id;
-    await svc.BuyAsync(assetId, dto.Qty, dto.Price, dto.Date);
     return TypedResults.Ok();
 })
-.ProducesProblem(StatusCodes.Status400BadRequest);
+.ProducesProblem(StatusCodes.Status400BadRequest)
+.ProducesProblem(StatusCodes.Status404NotFound);
 
 // SELL
-app.MapPost("/trades/sell", async Task<Results<Ok<SaleResult>, ProblemHttpResult>> (
+api.MapPost("/trades/sell", async Task<Results<Ok<SaleResult>, ProblemHttpResult>> (
     SellRequestDto dto, IAssetRepository repo, TradeService svc) =>
 {
     Guid assetId;
@@ -165,7 +170,7 @@ app.MapPost("/trades/sell", async Task<Results<Ok<SaleResult>, ProblemHttpResult
 .ProducesProblem(StatusCodes.Status409Conflict);
 
 // Lots
-app.MapGet("/lots", async (ILotRepository lotRepo, IAssetRepository assetRepo) =>
+api.MapGet("/lots", async (ILotRepository lotRepo, IAssetRepository assetRepo) =>
 {
     var lots   = await lotRepo.GetAllAsync();
     var assets = await assetRepo.GetAllAsync();
@@ -181,7 +186,7 @@ app.MapGet("/lots", async (ILotRepository lotRepo, IAssetRepository assetRepo) =
 });
 
 // Trades
-app.MapGet("/trades/all", async (ITradeRepository tradeRepo, IAssetRepository assetRepo) =>
+api.MapGet("/trades/all", async (ITradeRepository tradeRepo, IAssetRepository assetRepo) =>
 {
     var trades   = await tradeRepo.GetAllAsync();
     var assets = await assetRepo.GetAllAsync();
@@ -198,7 +203,7 @@ app.MapGet("/trades/all", async (ITradeRepository tradeRepo, IAssetRepository as
 
 app.UseDefaultFiles(); // index.html etc.
 app.UseStaticFiles();  // wwwroot
-app.Run("http://localhost:5255");
+app.Run();
 
 static ProblemHttpResult Invalid(string detail) =>
     TypedResults.Problem(detail, statusCode: StatusCodes.Status400BadRequest, title: "Invalid request");

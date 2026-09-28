@@ -24,20 +24,23 @@ export default function SellForm() {
     const assetsQ = useAssets();
     const assets: Asset[] = assetsQ.data ?? [];
 
-    // resolve the assetId for the typed ticker
-    const debouncedTicker = useDebounce(ticker.trim().toUpperCase(), 300);
+    // The request carries the ticker as typed. The lookup only enables the button once the
+    // asset is known for exactly this ticker, so a result for a previous ticker is never used.
+    const normalizedTicker = ticker.trim().toUpperCase();
+    const debouncedTicker = useDebounce(normalizedTicker, 300);
     const assetIdQ = useAssetId(debouncedTicker);
-    const assetId = assetIdQ.data ?? ""; // always a string
+    const lookupIsCurrent = debouncedTicker === normalizedTicker && !assetIdQ.isFetching;
+    const assetKnown = lookupIsCurrent && !!assetIdQ.data;
 
     const sell = useSell();
 
     const canSell =
-        assetId !== "" && qty > 0 && price > 0 && !sell.isPending;
+        assetKnown && qty > 0 && price > 0 && !sell.isPending;
 
     const handleSell = () => {
         if (!canSell) return;
         const dto: SellRequestDto = {
-            assetId,
+            ticker: normalizedTicker,
             qty,
             price,
             date: isoFromDateInput(date),
@@ -50,7 +53,7 @@ export default function SellForm() {
         assets.find(a => a.ticker.toUpperCase() === ticker.toUpperCase()) ?? null;
 
     const showNotFound =
-        ticker.length > 0 && !assetsQ.isLoading && assetId === "";
+        normalizedTicker.length > 0 && lookupIsCurrent && !assetIdQ.data;
 
     return (
         <Stack direction="row" spacing={2} alignItems="center" useFlexGap flexWrap="wrap">

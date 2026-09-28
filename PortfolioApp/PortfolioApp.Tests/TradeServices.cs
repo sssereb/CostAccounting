@@ -69,7 +69,7 @@ public class TradeServiceTests
     /* ----------------------------------------------------------------
      * BUY: Asset not found
      * --------------------------------------------------------------*/
-    [Fact(DisplayName = "Buy: Asset not found → InvalidOperationException")]
+    [Fact(DisplayName = "Buy: unknown asset id throws KeyNotFoundException")]
     public async Task Buy_Throws_When_AssetMissing()
     {
         var assets = new Mock<IAssetRepository>();
@@ -84,7 +84,7 @@ public class TradeServiceTests
             Mock.Of<IFeeService>(),
             new NoOpUnitOfWork());
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await Assert.ThrowsAsync<KeyNotFoundException>(() =>
             service.BuyAsync(Guid.NewGuid(), 1, 1m, DateTime.Today));
     }
 
@@ -126,8 +126,11 @@ public class TradeServiceTests
         feeSvc.Setup(f => f.CalcAll(50, 100m, FeeDirection.Sell))
               .Returns(new[] { new Fee(FeeType.FixedPerTrade, 7m) });
 
+        var assets = new Mock<IAssetRepository>();
+        assets.Setup(r => r.GetAsync(assetId, It.IsAny<CancellationToken>())).ReturnsAsync(new Asset("MSFT"));
+
         var service = new TradeService(
-            Mock.Of<IAssetRepository>(),
+            assets.Object,
             tradeRepo.Object,
             lotsRepo.Object,
             factory.Object,

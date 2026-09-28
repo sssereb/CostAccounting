@@ -3,7 +3,7 @@ import type { components, paths } from "./schema";
 
 export type Schemas = components["schemas"];
 
-export const api = createClient<paths>({ baseUrl: "/api" });
+export const api = createClient<paths>();
 
 export class ApiError extends Error {
   readonly status: number;

@@ -9,7 +9,7 @@ export type FeeDirection = Schemas["FeeDirection"];
 export function useFeeRules() {
   return useQuery({
     queryKey: ["fees"],
-    queryFn: () => unwrap(api.GET("/fees/get")),
+    queryFn: () => unwrap(api.GET("/api/fees/get")),
   });
 }
 
@@ -17,7 +17,7 @@ export function useSaveFeeRules() {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: (body: FeeRuleDto[]) => unwrap(api.POST("/fees/save", { body })),
+    mutationFn: (body: FeeRuleDto[]) => unwrap(api.POST("/api/fees/save", { body })),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["fees"] }),
   });
 }
@@ -26,7 +26,7 @@ export function useResetFeeRules() {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: () => unwrap(api.DELETE("/fees/delete")),
+    mutationFn: () => unwrap(api.DELETE("/api/fees/delete")),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["fees"] }),
   });
 }

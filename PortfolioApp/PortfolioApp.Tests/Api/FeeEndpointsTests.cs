@@ -14,7 +14,7 @@ public class FeeEndpointsTests
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
 
-        var rules = await HttpAssert.OkAsync<List<FeeRuleDto>>(await client.GetAsync("/fees/get"));
+        var rules = await HttpAssert.OkAsync<List<FeeRuleDto>>(await client.GetAsync("/api/fees/get"));
 
         Assert.Equal(2, rules.Count);
         Assert.All(rules, r => Assert.Equal(FeeDirection.Sell, r.Direction));
@@ -26,14 +26,14 @@ public class FeeEndpointsTests
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
 
-        var save = await client.PostAsJsonAsync("/fees/save", new[]
+        var save = await client.PostAsJsonAsync("/api/fees/save", new[]
         {
             new { type = "FixedPerTrade", amount = 5m, direction = "Buy" },
             new { type = "Percent", amount = 0.002m, direction = "Sell" }
         });
         await HttpAssert.StatusAsync(HttpStatusCode.NoContent, save);
 
-        var rules = await HttpAssert.OkAsync<List<FeeRuleDto>>(await client.GetAsync("/fees/get"));
+        var rules = await HttpAssert.OkAsync<List<FeeRuleDto>>(await client.GetAsync("/api/fees/get"));
         Assert.Equal(
             new[] { new FeeRuleDto(FeeType.FixedPerTrade, 5m, FeeDirection.Buy), new FeeRuleDto(FeeType.Percent, 0.002m, FeeDirection.Sell) },
             rules);
@@ -48,10 +48,10 @@ public class FeeEndpointsTests
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
 
-        var save = await client.PostAsync("/fees/save", new StringContent(body, System.Text.Encoding.UTF8, "application/json"));
+        var save = await client.PostAsync("/api/fees/save", new StringContent(body, System.Text.Encoding.UTF8, "application/json"));
         await HttpAssert.StatusAsync(HttpStatusCode.BadRequest, save);
 
-        var rules = await HttpAssert.OkAsync<List<FeeRuleDto>>(await client.GetAsync("/fees/get"));
+        var rules = await HttpAssert.OkAsync<List<FeeRuleDto>>(await client.GetAsync("/api/fees/get"));
         Assert.Equal(2, rules.Count);
     }
 
@@ -61,9 +61,9 @@ public class FeeEndpointsTests
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
 
-        await HttpAssert.StatusAsync(HttpStatusCode.NoContent, await client.DeleteAsync("/fees/delete"));
+        await HttpAssert.StatusAsync(HttpStatusCode.NoContent, await client.DeleteAsync("/api/fees/delete"));
 
-        var rules = await HttpAssert.OkAsync<List<FeeRuleDto>>(await client.GetAsync("/fees/get"));
+        var rules = await HttpAssert.OkAsync<List<FeeRuleDto>>(await client.GetAsync("/api/fees/get"));
         Assert.Empty(rules);
     }
 }

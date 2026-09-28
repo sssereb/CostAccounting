@@ -70,12 +70,11 @@ public class Program
                         Console.Write("Ticker Qty Price Date(yyyy/mm/dd): ");
                         var b = Console.ReadLine()?.Split(' ', StringSplitOptions.RemoveEmptyEntries)!;
 
-                        var selectedAsset = await IAssetRepository.GetOrCreateAsync(assetRepo, b[0]);
                         int qty        = int.Parse(b[1]);
                         decimal price  = decimal.Parse(b[2]);
                         var date       = DateTime.Parse(b[3]);
 
-                        await tradeService.BuyAsync(selectedAsset.Id, qty, price, date);
+                        await tradeService.BuyByTickerAsync(b[0], qty, price, date);
                         Console.WriteLine("✓ Buy recorded");
                         break;
                     }
@@ -84,7 +83,8 @@ public class Program
                         Console.Write("Ticker Qty Price Method(FIFO/LIFO/AVG) Date(yyyy/mm/dd): ");
                         var s = Console.ReadLine()?.Split(' ', StringSplitOptions.RemoveEmptyEntries)!;
 
-                        var selectedAsset = await IAssetRepository.GetOrCreateAsync(assetRepo, s[0]);
+                        var selectedAsset = await assetRepo.GetByTickerAsync(s[0])
+                                            ?? throw new KeyNotFoundException($"Unknown ticker {s[0]}.");
                         int qty        = int.Parse(s[1]);
                         decimal price  = decimal.Parse(s[2]);
                         var method     = s[3].ToUpper() switch

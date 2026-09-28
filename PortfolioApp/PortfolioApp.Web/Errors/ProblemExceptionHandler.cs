@@ -24,6 +24,7 @@ internal sealed class ProblemExceptionHandler : IExceptionHandler
         var (status, title, detail) = exception switch
         {
             BadHttpRequestException bad => (bad.StatusCode, "Invalid request", "The request body or parameters could not be read."),
+            KeyNotFoundException => (StatusCodes.Status404NotFound, "Not found", exception.Message),
             ArgumentException => (StatusCodes.Status400BadRequest, "Invalid request", exception.Message),
             InvalidOperationException => (StatusCodes.Status409Conflict, "Operation rejected", exception.Message),
             _ => (StatusCodes.Status500InternalServerError, "Unexpected error", "An unexpected error occurred."),

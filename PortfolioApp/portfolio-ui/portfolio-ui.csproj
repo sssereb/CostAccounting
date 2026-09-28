@@ -6,12 +6,13 @@
     <FrontendDir>$(MSBuildThisFileDirectory)</FrontendDir>
   </PropertyGroup>
 
-  <Target Name="NpmInstall" BeforeTargets="Build;Restore">
+  <!-- dotnet build -p:SkipFrontendBuild=true builds the backend alone (CI, regenerating API types). -->
+  <Target Name="NpmInstall" BeforeTargets="Build;Restore" Condition="'$(SkipFrontendBuild)' != 'true'">
     <Message Text="Running npm ci in $(FrontendDir)" Importance="high" />
     <Exec WorkingDirectory="$(FrontendDir)" Command="$(NpmCli) ci" />
   </Target>
 
-  <Target Name="NpmBuild" AfterTargets="Build" DependsOnTargets="NpmInstall">
+  <Target Name="NpmBuild" AfterTargets="Build" DependsOnTargets="NpmInstall" Condition="'$(SkipFrontendBuild)' != 'true'">
     <Message Text="Running npm run build" Importance="high" />
     <Exec WorkingDirectory="$(FrontendDir)" Command="$(NpmCli) run build" />
   </Target>

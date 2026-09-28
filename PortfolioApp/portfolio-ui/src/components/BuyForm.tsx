@@ -14,7 +14,6 @@ import {
   useAssets,
   type Asset,
 } from "../hooks/useTrades";
-import type { BuyRequestDto } from "../hooks/useTrades";
 import { useDebounce } from "../utils/useDebounce";
 
 const todayIsoDate = () => new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
@@ -30,25 +29,18 @@ export default function BuyForm() {
   const assetsQ = useAssets();
   const assets: Asset[] = assetsQ.data ?? [];
 
-  // look up the assetId for the typed ticker (if the asset exists)
-  const debouncedTicker = useDebounce(ticker.trim().toUpperCase(), 300);
+  // The request always carries the ticker as typed; the debounced lookup only drives the "new ticker" hint.
+  const normalizedTicker = ticker.trim().toUpperCase();
+  const debouncedTicker = useDebounce(normalizedTicker, 300);
   const assetIdQ = useAssetId(debouncedTicker);
   const buy = useBuy();
 
   const canBuy =
-    debouncedTicker.length > 0 && qty > 0 && price > 0 && !buy.isPending;
+    normalizedTicker.length > 0 && qty > 0 && price > 0 && !buy.isPending;
 
   const handleBuy = () => {
     if (!canBuy) return;
-
-    const base = { ticker, qty, price, date: isoFromDateInput(date) };
-
-    // send the existing assetId if found, otherwise send the ticker so the asset is created
-    const dto: BuyRequestDto = assetIdQ.data
-      ? { ...base, assetId: assetIdQ.data }
-      : { ...base, ticker: debouncedTicker };
-
-    buy.mutate(dto);
+    buy.mutate({ ticker: normalizedTicker, qty, price, date: isoFromDateInput(date) });
   };
 
   // currently selected Autocomplete value (object)
@@ -56,7 +48,7 @@ export default function BuyForm() {
     assets.find((a) => a.ticker.toUpperCase() === ticker.toUpperCase()) ?? null;
 
   const willCreate =
-    !!ticker && !assetIdQ.isLoading && (assetIdQ.data ?? "") === "";
+    debouncedTicker === normalizedTicker && !!debouncedTicker && !assetIdQ.isFetching && !assetIdQ.data;
 
   return (
     <Stack direction="row" spacing={2} alignItems="center" useFlexGap flexWrap="wrap">
